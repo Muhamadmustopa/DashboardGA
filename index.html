@@ -1,71 +1,390 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard GA – Perawatan & Kebersihan</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard GA — MAP</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #f3f4f6; }
-    footer { text-align: center; padding: 10px; font-size: 13px; background: #f3f4f6; border-top: 1px solid #ddd; }
-    .theme-switch { display: flex; align-items: center; cursor: pointer; gap: 8px; user-select: none; }
-    .theme-switch input { display: none; }
-    .slider { position: relative; width: 50px; height: 24px; background-color: #ccc; border-radius: 24px; transition: 0.4s; }
-    .slider:before { content: "🌞"; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background-color: white; border-radius: 50%; text-align: center; font-size: 14px; line-height: 20px; transition: 0.4s; }
-    input:checked + .slider { background-color: #4b5563; }
-    input:checked + .slider:before { transform: translateX(26px); content: "🌙"; }
-    .label-text { font-size: 14px; }
-    .chart-container { height: 300px; }
-    body.dark-theme { background: #1f2937; color: #f9fafb; }
-    body.dark-theme header, body.dark-theme footer { background: #374151; border-color: #4b5563; }
+    :root{ color-scheme: light dark; }
+    body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    .card{ @apply rounded-2xl shadow-sm border border-slate-200 bg-white; }
+    .dark .card{ @apply border-slate-800 bg-slate-900; }
+    .chip{ @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium; }
+    .chip-green{ @apply bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200; }
+    .chip-amber{ @apply bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200; }
+    .chip-red{ @apply bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200; }
+    .btn{ @apply inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold shadow-sm border border-slate-200 bg-white hover:bg-slate-50 active:scale-[.99]; }
+    .dark .btn{ @apply border-slate-800 bg-slate-900 hover:bg-slate-800; }
+    .grid-cards{ @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-4; }
+    .section-title{ @apply text-slate-700 dark:text-slate-200 font-semibold; }
+    .kbd{ @apply px-2 py-1 rounded-md border text-xs bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700; }
+
+    /* Theme switch (slider) */
+    .theme-switch { @apply flex items-center gap-2 cursor-pointer select-none; }
+    .theme-switch input{ display:none; }
+    .theme-slider{ position: relative; width: 50px; height: 24px; background: #cbd5e1; border-radius: 9999px; transition: .3s; }
+    .theme-slider::before{ content:'🌞'; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:#fff; display:grid; place-items:center; font-size:14px; line-height:1; transition:.3s; }
+    .theme-switch input:checked + .theme-slider{ background:#475569; }
+    .theme-switch input:checked + .theme-slider::before{ transform: translateX(26px); content:'🌙'; }
+
+    /* Fix chart heights */
+    .h-chart{ height:300px; }
   </style>
 </head>
-<body>
-  <header>
-    <h1>Dashboard GA</h1>
-    <label class="theme-switch" title="Toggle tema (Terang/Gelap)">
-      <input type="checkbox" id="btnToggleTheme">
-      <span class="slider"></span>
-      <span class="label-text">Tema</span>
-    </label>
-  </header>
-  <main style="padding:20px;">
-    <h2>Progres Perawatan</h2>
-    <div class="chart-container">
-      <canvas id="barChart"></canvas>
-    </div>
-  </main>
-  <footer>
-    Dashboard GA – Perawatan & Kebersihan | © 2025 Mitra Asa Pratama
-  </footer>
-  <script>
-    document.getElementById("btnToggleTheme").addEventListener("change", function () {
-      document.body.classList.toggle("dark-theme", this.checked);
-    });
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
+  <div class="max-w-7xl mx-auto p-4 sm:p-6">
+    <!-- Header -->
+    <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Dashboard General Affair - MAP</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Perawatan AC • Perawatan Kendaraan • Perawatan Elektronik • Kebersihan Area</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <!-- Theme switch -->
+        <label class="theme-switch" title="Toggle tema (Terang/Gelap)">
+          <input type="checkbox" id="btnToggleTheme">
+          <span class="theme-slider"></span>
+          <span class="text-sm">Tema</span>
+        </label>
+        <button id="btnExportCSV" class="btn" title="Ekspor ringkasan ke CSV">⬇️ <span class="ml-2 hidden sm:inline">Ekspor</span></button>
+      </div>
+    </header>
 
-    const ctx = document.getElementById('barChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Perawatan AC', 'Perawatan Kendaraan', 'Perawatan Elektronik', 'Kebersihan Area'],
-        datasets: [{
-          label: 'Selesai',
-          data: [7, 3, 5, 9],
-          backgroundColor: 'rgba(75, 192, 192, 0.6)'
-        }, {
-          label: 'Belum Selesai',
-          data: [1, 2, 1, 1],
-          backgroundColor: 'rgba(255, 99, 132, 0.6)'
+    <!-- Filters -->
+    <section class="card p-4 mb-4">
+      <div class="flex flex-col md:flex-row md:items-end gap-3">
+        <div class="grow">
+          <label class="block text-xs font-medium text-slate-500 mb-1">Periode</label>
+          <div class="grid grid-cols-2 gap-3">
+            <select id="filterMonth" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700"></select>
+            <select id="filterYear" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700"></select>
+          </div>
+        </div>
+        <div class="grow">
+          <label class="block text-xs font-medium text-slate-500 mb-1">Lokasi</label>
+          <select id="filterLocation" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+            <option value="ALL">Semua Lokasi</option>
+          </select>
+        </div>
+        <div class="grow">
+          <label class="block text-xs font-medium text-slate-500 mb-1">Status</label>
+          <select id="filterStatus" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+            <option value="ALL">Semua Status</option>
+            <option value="Selesai">Selesai</option>
+            <option value="Proses">Proses</option>
+            <option value="Belum">Belum</option>
+          </select>
+        </div>
+        <div class="flex gap-2">
+          <button id="btnReset" class="btn">Reset</button>
+          <button id="btnEditData" class="btn">Edit Data</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Cards -->
+    <section class="grid-cards mb-4" id="kpiCards"></section>
+
+    <!-- Charts -->
+    <section class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
+      <div class="card p-4 xl:col-span-2">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="section-title">Progress per Kategori (Selesai vs Belum)</h3>
+          <span class="kbd">Bar</span>
+        </div>
+        <div class="h-chart">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+      <div class="card p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="section-title">Proporsi Pekerjaan</h3>
+          <span class="kbd">Pie</span>
+        </div>
+        <div class="h-chart">
+          <canvas id="pieChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Progress Ring (Overall) -->
+    <section class="grid grid-cols-1 gap-4 mb-4">
+      <div class="card p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="section-title">Progress Ring — Persentase Penyelesaian Total</h3>
+          <span class="kbd">Doughnut</span>
+        </div>
+        <div class="h-chart max-w-xl">
+          <canvas id="ringChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tables -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="card p-4">
+        <h3 class="section-title mb-3">Perawatan AC</h3>
+        <div class="overflow-auto">
+          <table class="w-full text-sm" id="table-ac"></table>
+        </div>
+      </div>
+      <div class="card p-4">
+        <h3 class="section-title mb-3">Perawatan Kendaraan</h3>
+        <div class="overflow-auto">
+          <table class="w-full text-sm" id="table-kendaraan"></table>
+        </div>
+      </div>
+      <div class="card p-4">
+        <h3 class="section-title mb-3">Perawatan Elektronik</h3>
+        <div class="overflow-auto">
+          <table class="w-full text-sm" id="table-elektronik"></table>
+        </div>
+      </div>
+      <div class="card p-4">
+        <h3 class="section-title mb-3">Kebersihan Area</h3>
+        <div class="overflow-auto">
+          <table class="w-full text-sm" id="table-kebersihan"></table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-8 border-t border-slate-200 dark:border-slate-800 text-center text-sm text-slate-500 dark:text-slate-400 py-4">
+    Dashboard GA – MAP • © 2025 • Dibuat oleh Tim GA
+  </footer>
+
+  <!-- Editor Modal -->
+  <dialog id="editor" class="p-0 rounded-2xl w-[min(900px,95vw)]">
+    <form method="dialog" class="card p-0">
+      <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <h3 class="font-semibold">Edit Data (JSON)</h3>
+        <button class="btn" value="cancel">Tutup</button>
+      </div>
+      <div class="p-4">
+        <p class="text-sm text-slate-500 mb-2">Ubah/ Tambah data pada array <code>records</code>. Klik <b>Simpan</b> untuk menerapkan.</p>
+        <textarea id="editorTextarea" class="w-full h-[55vh] rounded-xl border border-slate-300 p-3 font-mono text-xs dark:bg-slate-900 dark:border-slate-700"></textarea>
+      </div>
+      <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+        <button class="btn" value="cancel">Batal</button>
+        <button id="btnSaveData" type="button" class="btn">Simpan</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    // ---------- Sample Data (edit via JSON editor) ----------
+    let records = [
+      // AC
+      { id: 1,  kategori: 'AC', judul: 'Cuci AC Split Ruang HR', lokasi: 'Lantai 2 - HR', tanggal: '2025-08-05', status: 'Selesai', penanggungJawab: 'Adi', biaya: 250000, catatan: 'Freon normal' },
+      { id: 2,  kategori: 'AC', judul: 'Periksa kebocoran AC Server', lokasi: 'Ruang Server', tanggal: '2025-08-10', status: 'Proses', penanggungJawab: 'Budi', biaya: 0, catatan: 'Cek pipa drain' },
+      { id: 3,  kategori: 'AC', judul: 'Ganti filter AC Lobby', lokasi: 'Lobby', tanggal: '2025-08-14', status: 'Belum', penanggungJawab: 'Dedi', biaya: 100000, catatan: '' },
+      // Kendaraan
+      { id: 11, kategori: 'Kendaraan', judul: 'Service Berkala Avanza', lokasi: 'Bengkel Resmi', tanggal: '2025-08-03', status: 'Selesai', penanggungJawab: 'Rina', biaya: 950000, catatan: 'Ganti oli' },
+      { id: 12, kategori: 'Kendaraan', judul: 'Perpanjang STNK Motor', lokasi: 'Samsat', tanggal: '2025-08-12', status: 'Selesai', penanggungJawab: 'Joko', biaya: 450000, catatan: '' },
+      { id: 13, kategori: 'Kendaraan', judul: 'Tambal Ban Motor', lokasi: 'Parkir Basement', tanggal: '2025-08-15', status: 'Proses', penanggungJawab: 'Rina', biaya: 15000, catatan: '' },
+      // Elektronik
+      { id: 21, kategori: 'Elektronik', judul: 'Periksa Printer Keuangan', lokasi: 'Keuangan', tanggal: '2025-08-02', status: 'Selesai', penanggungJawab: 'Andi', biaya: 0, catatan: 'Cleaning head' },
+      { id: 22, kategori: 'Elektronik', judul: 'Ganti Mouse Procurement', lokasi: 'Procurement', tanggal: '2025-08-08', status: 'Selesai', penanggungJawab: 'Sari', biaya: 75000, catatan: '' },
+      { id: 23, kategori: 'Elektronik', judul: 'Instal Ulang OS Div. R&D', lokasi: 'R&D', tanggal: '2025-08-13', status: 'Belum', penanggungJawab: 'Fajar', biaya: 0, catatan: 'Backup dulu' },
+      // Kebersihan
+      { id: 31, kategori: 'Kebersihan', judul: 'Deep Cleaning Pantry', lokasi: 'Pantry', tanggal: '2025-08-01', status: 'Selesai', penanggungJawab: 'Tim OB', biaya: 0, catatan: '' },
+      { id: 32, kategori: 'Kebersihan', judul: 'General Cleaning Musholla', lokasi: 'Musholla', tanggal: '2025-08-09', status: 'Selesai', penanggungJawab: 'Tim OB', biaya: 0, catatan: '' },
+      { id: 33, kategori: 'Kebersihan', judul: 'Pembersihan Jamur Dinding', lokasi: 'Gudang', tanggal: '2025-08-16', status: 'Belum', penanggungJawab: 'Tim OB', biaya: 0, catatan: 'Butuh cairan anti jamur' },
+    ];
+
+    // ---------- Utilities ----------
+    const $ = (sel) => document.querySelector(sel);
+    const months = [ '01|Januari','02|Februari','03|Maret','04|April','05|Mei','06|Juni', '07|Juli','08|Agustus','09|September','10|Oktober','11|November','12|Desember' ];
+
+    function getPeriod(){ const m = $('#filterMonth').value; const y = $('#filterYear').value; return {m, y}; }
+    const fmtCurrency = (n)=> new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n||0);
+    function byPeriod(rec, m, y){ const d = new Date(rec.tanggal); return (String(d.getMonth()+1).padStart(2,'0')===m) && (String(d.getFullYear())===y); }
+    function byFilters(rec){ const {m,y}=getPeriod(); const loc=$('#filterLocation').value; const st=$('#filterStatus').value; return byPeriod(rec,m,y) && (loc==='ALL'||rec.lokasi===loc) && (st==='ALL'||rec.status===st); }
+    const categoryList = ()=>['AC','Kendaraan','Elektronik','Kebersihan'];
+
+    function badge(pct){ if(pct>=90) return '<span class="chip chip-green">Baik</span>'; if(pct>=70) return '<span class="chip chip-amber">Perlu perhatian</span>'; return '<span class="chip chip-red">Butuh tindakan</span>'; }
+
+    // ---------- Filters init ----------
+    function initFilters(){
+      $('#filterMonth').innerHTML = months.map(s=>{ const [v,t]=s.split('|'); return `<option value="${v}">${t}</option>` }).join('');
+      const yNow = new Date().getFullYear(); const yearOpts=[]; for(let y=yNow-2;y<=yNow+1;y++) yearOpts.push(`<option value="${y}">${y}</option>`);
+      $('#filterYear').innerHTML = yearOpts.join('');
+      const now = new Date(); $('#filterMonth').value = String(now.getMonth()+1).padStart(2,'0'); $('#filterYear').value = String(now.getFullYear());
+      const locs = Array.from(new Set(records.map(r=>r.lokasi))).sort();
+      $('#filterLocation').innerHTML = ['<option value="ALL">Semua Lokasi</option>', ...locs.map(l=>`<option value="${l}">${l}</option>`)].join('');
+    }
+
+    // ---------- KPI rendering ----------
+    function kpiFor(cat, items){
+      const total = items.length;
+      const selesai = items.filter(i=>i.status==='Selesai').length;
+      const belum = items.filter(i=>i.status==='Belum').length;
+      const proses = items.filter(i=>i.status==='Proses').length;
+      const biaya = items.reduce((a,b)=>a+(b.biaya||0),0);
+      const pct = total? Math.round((selesai/total)*100) : 0;
+      return {cat,total,selesai,belum,proses,biaya,pct};
+    }
+
+    function renderKPIs(){
+      const data = categoryList().map(cat=>{ const it = records.filter(r=>r.kategori===cat && byFilters(r)); return kpiFor(cat, it); });
+      const html = data.map(d=>`
+        <div class="card p-4">
+          <div class="flex items-center justify-between">
+            <p class="text-xs uppercase tracking-wide text-slate-500">${d.cat}</p>
+            ${badge(d.pct)}
+          </div>
+          <div class="mt-2 flex items-end justify-between">
+            <div>
+              <div class="text-3xl font-extrabold">${d.pct}%</div>
+              <p class="text-xs text-slate-500">${d.selesai}/${d.total} selesai</p>
+            </div>
+            <div class="text-right text-xs">
+              <div>Proses: <b>${d.proses}</b></div>
+              <div>Belum: <b>${d.belum}</b></div>
+              <div class="mt-1 text-slate-500">Biaya: <b>${fmtCurrency(d.biaya)}</b></div>
+            </div>
+          </div>
+          <div class="mt-3 h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800"><div class="h-2 rounded-full bg-emerald-500" style="width:${d.pct}%"></div></div>
+        </div>`).join('');
+      $('#kpiCards').innerHTML = html;
+    }
+
+    // ---------- Tables ----------
+    function tableTemplate(items){
+      if(items.length===0) return '<p class="text-sm text-slate-500">Tidak ada data untuk filter ini.</p>';
+      const head = `
+        <thead class="text-left text-xs text-slate-500">
+          <tr>
+            <th class="py-2 pr-2">Tanggal</th>
+            <th class="py-2 pr-2">Judul</th>
+            <th class="py-2 pr-2">Lokasi</th>
+            <th class="py-2 pr-2">Penanggung Jawab</th>
+            <th class="py-2 pr-2">Status</th>
+            <th class="py-2 pr-2 text-right">Biaya</th>
+          </tr>
+        </thead>`;
+      const body = items.map(r=>{
+        const chip = r.status==='Selesai' ? 'chip-green' : r.status==='Proses' ? 'chip-amber' : 'chip-red';
+        return `
+          <tr class="border-t border-slate-100 dark:border-slate-800">
+            <td class="py-2 pr-2 whitespace-nowrap">${r.tanggal}</td>
+            <td class="py-2 pr-2">${r.judul}</td>
+            <td class="py-2 pr-2">${r.lokasi}</td>
+            <td class="py-2 pr-2 whitespace-nowrap">${r.penanggungJawab||'-'}</td>
+            <td class="py-2 pr-2"><span class="chip ${chip}">${r.status}</span></td>
+            <td class="py-2 pr-2 text-right whitespace-nowrap">${fmtCurrency(r.biaya)}</td>
+          </tr>`
+      }).join('');
+      return head+`<tbody>${body}</tbody>`;
+    }
+
+    function renderTables(){
+      const ac = records.filter(r=>r.kategori==='AC' && byFilters(r)).sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
+      const kn = records.filter(r=>r.kategori==='Kendaraan' && byFilters(r)).sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
+      const el = records.filter(r=>r.kategori==='Elektronik' && byFilters(r)).sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
+      const kb = records.filter(r=>r.kategori==='Kebersihan' && byFilters(r)).sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
+      $('#table-ac').innerHTML = tableTemplate(ac);
+      $('#table-kendaraan').innerHTML = tableTemplate(kn);
+      $('#table-elektronik').innerHTML = tableTemplate(el);
+      $('#table-kebersihan').innerHTML = tableTemplate(kb);
+    }
+
+    // ---------- Charts ----------
+    let barChart, pieChart, ringChart;
+
+    function destroyCharts(){ if(barChart){barChart.destroy();} if(pieChart){pieChart.destroy();} if(ringChart){ringChart.destroy();} }
+
+    function renderCharts(){
+      destroyCharts();
+      const cats = categoryList();
+      const selesai = []; const belum = []; const total = []; let totalDone=0; let totalAll=0;
+
+      cats.forEach(cat=>{
+        const items = records.filter(r=>r.kategori===cat && byFilters(r));
+        const k = kpiFor(cat, items);
+        selesai.push(k.selesai); belum.push(k.total - k.selesai); total.push(k.total);
+        totalDone += k.selesai; totalAll += k.total;
+      });
+
+      // Bar
+      barChart = new Chart(document.getElementById('barChart'), {
+        type: 'bar', data: { labels: cats, datasets: [ { label: 'Selesai', data: selesai }, { label: 'Belum', data: belum } ] },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}}, scales:{ y:{ beginAtZero:true, precision:0 } } }
+      });
+
+      // Pie
+      pieChart = new Chart(document.getElementById('pieChart'), {
+        type: 'pie', data: { labels: cats, datasets: [{ data: total }] }, options: { responsive:true, maintainAspectRatio:false }
+      });
+
+      // Progress Ring (doughnut)
+      const pct = totalAll? Math.round((totalDone/totalAll)*100) : 0;
+      ringChart = new Chart(document.getElementById('ringChart'), {
+        type: 'doughnut',
+        data: { labels:['Selesai','Sisa'], datasets:[{ data:[totalDone, Math.max(totalAll-totalDone,0)] }] },
+        options: { responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{ legend:{display:false}, tooltip:{enabled:true} } },
+        plugins: [{
+          id:'centerText',
+          afterDraw(chart, args, opts){
+            const {ctx, chartArea:{width, height}} = chart; ctx.save();
+            ctx.font = '700 28px Inter, system-ui, sans-serif'; ctx.textAlign='center'; ctx.fillStyle = getComputedStyle(document.documentElement).color;
+            ctx.fillText(`${pct}%`, chart.getDatasetMeta(0).data[0].x, chart.getDatasetMeta(0).data[0].y+8);
+            ctx.restore();
+          }
         }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        layout: { padding: { top: 10, bottom: 10 } }
-      }
-    });
+      });
+    }
+
+    // ---------- Export CSV ----------
+    function exportCSV(){
+      const header = ['id','kategori','judul','lokasi','tanggal','status','penanggungJawab','biaya','catatan'];
+      const rows = records.filter(byFilters).map(r=>header.map(h=>String(r[h]??'').replaceAll('"','""')));
+      const csv = [header.join(','), ...rows.map(r=>r.map(v=>`"${v}"`).join(','))].join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `dashboard-ga_${$('#filterYear').value}-${$('#filterMonth').value}.csv`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    // ---------- Editor Modal ----------
+    function openEditor(){ document.getElementById('editorTextarea').value = JSON.stringify(records, null, 2); document.getElementById('editor').showModal(); }
+    function saveEditor(){ try{ const next = JSON.parse(document.getElementById('editorTextarea').value); if(!Array.isArray(next)) throw new Error('Format harus array []'); records = next; const locs = Array.from(new Set(records.map(r=>r.lokasi))).sort(); document.getElementById('filterLocation').innerHTML = ['<option value="ALL">Semua Lokasi</option>', ...locs.map(l=>`<option value="${l}">${l}</option>`)].join(''); renderAll(); document.getElementById('editor').close(); }catch(err){ alert('Gagal menyimpan data: '+ err.message); }}
+
+    // ---------- Theme ----------
+    function initTheme(){ const saved = localStorage.getItem('theme'); if(saved==='dark') document.documentElement.classList.add('dark'); document.getElementById('btnToggleTheme').checked = saved==='dark'; }
+    function toggleTheme(){ const root = document.documentElement; root.classList.toggle('dark'); localStorage.setItem('theme', root.classList.contains('dark')?'dark':'light'); }
+
+    // ---------- Render all ----------
+    function renderAll(){ renderKPIs(); renderCharts(); renderTables(); }
+
+    // ---------- Events ----------
+    function bindEvents(){
+      ['filterMonth','filterYear','filterLocation','filterStatus'].forEach(id=> document.getElementById(id).addEventListener('change', renderAll));
+      document.getElementById('btnReset').addEventListener('click', ()=>{ initFilters(); renderAll(); });
+      document.getElementById('btnEditData').addEventListener('click', openEditor);
+      document.getElementById('btnSaveData').addEventListener('click', saveEditor);
+      document.getElementById('btnExportCSV').addEventListener('click', exportCSV);
+      document.getElementById('btnToggleTheme').addEventListener('change', toggleTheme);
+      window.addEventListener('keydown', (e)=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='e'){ e.preventDefault(); openEditor(); } });
+    }
+
+    // ---------- Boot ----------
+    (function boot(){
+      initTheme();
+      // init filters (month/year/location)
+      $('#filterMonth') && initFilters();
+      // Build month/year defaults if page loaded mid-month
+      renderAll();
+      bindEvents();
+    })();
   </script>
 </body>
 </html>
