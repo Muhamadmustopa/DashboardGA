@@ -1,546 +1,660 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dashboard GA — MAP</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard GA — Mobile Friendly</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
   <style>
-    :root{ color-scheme: light dark; }
-    body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
-    .card{ @apply rounded-2xl shadow-sm border border-slate-200 bg-white; }
-    .dark .card{ @apply border-slate-800 bg-slate-900; }
-    .chip{ @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium; }
-    .chip-green{ @apply bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200; }
-    .chip-amber{ @apply bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200; }
-    .chip-red{ @apply bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200; }
-    .btn{ @apply inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold shadow-sm border border-slate-200 bg-white hover:bg-slate-50 active:scale-[.99]; }
-    .btn-danger{ @apply border-red-200 text-red-700 bg-red-50 hover:bg-red-100 dark:border-red-900 dark:text-red-300 dark:bg-red-950/40; }
-    .btn-primary{ @apply bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700; }
-    .dark .btn{ @apply border-slate-800 bg-slate-900 hover:bg-slate-800; }
-    .grid-cards{ @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-4; }
-    .section-title{ @apply text-slate-700 dark:text-slate-200 font-semibold; }
-    .kbd{ @apply px-2 py-1 rounded-md border text-xs bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700; }
+    /* -------------------------
+       Theme variables
+       ------------------------- */
+    :root{
+      --bg: #0f172a;
+      --panel: #0b1220;
+      --muted: #94a3b8;
+      --card-border: rgba(255,255,255,0.06);
+      --accent: #10b981;
+      --danger: #ef4444;
+      --table-border: rgba(255,255,255,0.06);
+      --text: #e6eef8;
+    }
+    html.light {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --muted: #475569;
+      --card-border: rgba(15,23,42,0.06);
+      --accent: #059669;
+      --danger: #dc2626;
+      --table-border: rgba(15,23,42,0.08);
+      --text: #0b1220;
+    }
 
-    /* Theme switch (slider) */
-    .theme-switch { @apply flex items-center gap-2 cursor-pointer select-none; }
-    .theme-switch input{ display:none; }
-    .theme-slider{ position: relative; width: 50px; height: 24px; background: #cbd5e1; border-radius: 9999px; transition: .3s; }
-    .theme-slider::before{ content:'🌞'; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:#fff; display:grid; place-items:center; font-size:14px; line-height:1; transition:.3s; }
-    .theme-switch input:checked + .theme-slider{ background:#475569; }
-    .theme-switch input:checked + .theme-slider::before{ transform: translateX(26px); content:'🌙'; }
+    /* -------------------------
+       Base
+       ------------------------- */
+    * { box-sizing: border-box; }
+    html,body { height:100%; margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    .container { max-width:1100px; margin:12px auto; padding:12px; }
 
-    /* Chart fixed heights */
-    .h-chart{ height:300px; }
+    .card { background:var(--panel); border-radius:12px; border:1px solid var(--card-border); padding:12px; margin-bottom:12px; }
+    .muted { color:var(--muted); font-size:13px; }
 
-    /* Table */
-    table th, table td{ @apply text-sm; }
-    table th{ @apply text-left text-xs text-slate-500 font-medium; }
-    .action-btn{ @apply inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-xs; }
+    h1 { margin:0; font-size:18px; font-weight:700; }
+    p.lead { margin:4px 0 0; color:var(--muted); font-size:13px; }
+
+    /* -------------------------
+       Header / toolbar
+       ------------------------- */
+    .header { display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn {
+      background:transparent; border:1px solid var(--card-border); color:var(--text); padding:8px 10px; border-radius:10px; cursor:pointer;
+      font-weight:600; font-size:13px;
+    }
+    .btn.primary { background:linear-gradient(90deg,var(--accent), #00c38a); color:white; border:none; }
+    .btn.small { padding:6px 8px; font-size:12px; border-radius:8px; }
+
+    /* theme switch */
+    .theme-switch{ display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; }
+    .switch{ width:52px; height:28px; border-radius:999px; background:#cbd5e1; position:relative; }
+    .switch::before{ content:"🌞"; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; display:grid; place-items:center; transition:all .22s; font-size:14px; }
+    html.light .switch{ background:#f1f5f9; }
+    .switch[data-on="1"]{ background:#334155; }
+    .switch[data-on="1"]::before{ transform:translateX(24px); content:"🌙"; }
+
+    /* -------------------------
+       Filters grid
+       ------------------------- */
+    .filters { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; }
+    label.small { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    select,input { width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--card-border); background:transparent; color:var(--text); font-size:13px; }
+
+    /* -------------------------
+       KPI grid
+       ------------------------- */
+    .kpi-grid { display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-top:8px; }
+    .kpi { padding:10px; border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); }
+    .kpi .title { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px; }
+    .kpi .value { font-size:20px; font-weight:700; margin-top:6px; }
+    .progress-bar { height:8px; background:rgba(255,255,255,0.03); border-radius:8px; overflow:hidden; margin-top:8px; }
+    .progress-bar > i { display:block; height:100%; background:linear-gradient(90deg,var(--accent), #00c38a); }
+
+    .chip { display:inline-block; padding:4px 8px; border-radius:999px; font-weight:700; font-size:12px; }
+    .chip.good { color:#10b981; background: rgba(16,185,129,0.08); }
+    .chip.warn { color:#f59e0b; background: rgba(251,191,36,0.08); }
+    .chip.bad { color:#ef4444; background: rgba(239,68,68,0.08); }
+
+    /* -------------------------
+       Charts + tables layout
+       ------------------------- */
+    .charts { display:grid; grid-template-columns: 1fr 320px; gap:12px; }
+    .h-300 { height:300px; }
+
+    .tables { display:grid; grid-template-columns: repeat(2,1fr); gap:12px; margin-top:8px; }
+
+    .table-container { max-height:300px; overflow:auto; border-radius:10px; border:1px solid var(--table-border); background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); }
+    table { width:100%; border-collapse:collapse; min-width:700px; }
+    th, td { padding:10px 12px; text-align:left; font-size:13px; border-bottom:1px solid rgba(255,255,255,0.03); }
+    th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:0.6px; }
+    td .status { padding:6px 8px; border-radius:8px; font-weight:700; font-size:12px; display:inline-block; }
+    .status.done { color:#10b981; background: rgba(16,185,129,0.08); }
+    .status.process { color:#f59e0b; background: rgba(251,191,36,0.08); }
+    .status.pending { color:#ef4444; background: rgba(239,68,68,0.08); }
+
+    .action-btn { margin-left:6px; padding:6px 8px; border-radius:8px; border:1px solid var(--card-border); background:transparent; cursor:pointer; font-size:13px; color:var(--text); }
+
+    /* -------------------------
+       Mobile responsiveness
+       ------------------------- */
+    @media (max-width:900px){
+      .filters { grid-template-columns: repeat(2,1fr); }
+      .kpi-grid { grid-template-columns: repeat(2,1fr); }
+      .charts { grid-template-columns: 1fr; }
+      .tables { grid-template-columns: 1fr; }
+    }
+
+    /* On small screens switch tables -> card list for readability */
+    @media (max-width:640px){
+      table { min-width:unset; display:none; } /* hide tables */
+      .card-list { display:block; } /* show card list */
+    }
+    /* On larger screens hide card-list */
+    .card-list { display:none; }
+    .card-item { border-radius:10px; border:1px solid var(--card-border); padding:10px; margin-bottom:8px; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); }
+    .card-item .meta{ display:flex; justify-content:space-between; gap:8px; font-size:13px; color:var(--muted); }
+    .card-item .title{ font-weight:700; margin:6px 0; }
+
+    footer { text-align:center; color:var(--muted); font-size:13px; margin-top:8px; }
+
+    /* small helpers */
+    .right { text-align:right; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
-  <div class="max-w-7xl mx-auto p-4 sm:p-6">
+<body>
+  <div class="container">
     <!-- Header -->
-    <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+    <div class="card header" style="align-items:flex-start;">
       <div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Dashboard General Affair - MAP</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Perawatan AC • Perawatan Kendaraan • Perawatan Elektronik • Kebersihan Area</p>
+        <h1>Dashboard General Affair — MAP</h1>
+        <p class="lead muted">Perawatan AC • Perawatan Kendaraan • Perawatan Elektronik • Kebersihan Area</p>
       </div>
-      <div class="flex items-center gap-3 flex-wrap">
-        <button id="btnCreate" class="btn btn-primary" title="Tambah data baru">➕ <span class="ml-1">Tambah Data</span></button>
-        <label class="theme-switch" title="Toggle tema (Terang/Gelap)">
-          <input type="checkbox" id="btnToggleTheme">
-          <span class="theme-slider"></span>
-          <span class="text-sm"></span>
-        </label>
-        <button id="btnExportCSV" class="btn" title="Ekspor ringkasan ke CSV">⬇️ <span class="ml-2 hidden sm:inline">Ekspor xls</span></button>
-        <button id="btnEditData" class="btn" title="Edit data via JSON (lanjutan)">📝 <span class="ml-2 hidden sm:inline"></span></button>
+
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div class="toolbar">
+          <button id="btnCreate" class="btn primary admin-only" title="Tambah data baru">➕ Tambah</button>
+          <div class="theme-switch" title="Ganti tema">
+            <div id="themeSwitch" class="switch" data-on="1"></div>
+          </div>
+          <button id="btnExportCSV" class="btn" title="Ekspor CSV">⬇️ CSV</button>
+          <button id="btnEditData" class="btn" title="Editor JSON">📝 JSON</button>
+        </div>
       </div>
-    </header>
+    </div>
 
     <!-- Filters -->
-    <section class="card p-4 mb-4">
-      <div class="flex flex-col md:flex-row md:items-end gap-3">
-        <div class="grow">
-          <label class="block text-xs font-medium text-slate-500 mb-1">Periode</label>
-          <div class="grid grid-cols-2 gap-3">
-            <select id="filterMonth" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700"></select>
-            <select id="filterYear" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700"></select>
-          </div>
+    <div class="card">
+      <div class="filters">
+        <div>
+          <label class="small">Bulan</label>
+          <select id="filterMonth"></select>
         </div>
-        <div class="grow">
-          <label class="block text-xs font-medium text-slate-500 mb-1">Lokasi</label>
-          <select id="filterLocation" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
-            <option value="">Semua Lokasi</option>
-          </select>
+        <div>
+          <label class="small">Tahun</label>
+          <select id="filterYear"></select>
         </div>
-        <div class="grow">
-          <label class="block text-xs font-medium text-slate-500 mb-1">Status</label>
-          <select id="filterStatus" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+        <div>
+          <label class="small">Lokasi</label>
+          <select id="filterLocation"><option value="ALL">Semua Lokasi</option></select>
+        </div>
+        <div>
+          <label class="small">Status</label>
+          <select id="filterStatus">
             <option value="ALL">Semua Status</option>
             <option value="Selesai">Selesai</option>
             <option value="Proses">Proses</option>
             <option value="Belum">Belum</option>
           </select>
         </div>
-        <div class="flex gap-2">
-          <button id="btnReset" class="btn">Reset</button>
-        </div>
-      </div>
-    </section>
 
-    <!-- KPI Cards -->
-    <section class="grid-cards mb-4" id="kpiCards"></section>
+        <div style="grid-column:span 4; display:flex; gap:8px; margin-top:8px; align-items:center;">
+          <button id="btnReset" class="btn small">Reset Filter</button>
+          <div style="flex:1"></div>
+          <div class="muted">Role: <span id="roleLabel"></span></div>
+        </div>
+      </div>
+    </div>
 
-    <!-- Charts -->
-    <section class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
-      <div class="card p-4 xl:col-span-2">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="section-title">Progress per Kategori (Selesai vs Belum)</h3>
-          <span class="kbd">Bar</span>
-        </div>
-        <div class="h-chart">
-          <canvas id="barChart"></canvas>
-        </div>
-      </div>
-      <div class="card p-4">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="section-title">Proporsi Pekerjaan</h3>
-          <span class="kbd">Pie</span>
-        </div>
-        <div class="h-chart">
-          <canvas id="pieChart"></canvas>
-        </div>
-      </div>
-    </section>
+    <!-- KPI -->
+    <div id="kpiCards" class="kpi-grid"></div>
 
-    <!-- Progress Ring (Overall) -->
-    <section class="grid grid-cols-1 gap-4 mb-4">
-      <div class="card p-4">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="section-title">Progress Ring — Persentase Penyelesaian Total</h3>
-          <span class="kbd">Doughnut</span>
+    <!-- Charts & Tables -->
+    <div class="charts" style="margin-top:8px;">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div><strong>Progress per Kategori</strong><div class="muted">Selesai vs Belum</div></div>
+          <div class="muted">Bar</div>
         </div>
-        <div class="h-chart max-w-xl">
-          <canvas id="ringChart"></canvas>
-        </div>
+        <div class="h-300"><canvas id="barChart" style="width:100%; height:100%;"></canvas></div>
       </div>
-    </section>
 
-    <!-- Tables -->
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="card p-4">
-        <h3 class="section-title mb-3">Perawatan AC</h3>
-        <div class="overflow-auto">
-          <table class="w-full" id="table-ac"></table>
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div><strong>Proporsi Pekerjaan</strong><div class="muted">Jumlah per kategori</div></div>
+          <div class="muted">Pie</div>
         </div>
+        <div style="display:flex; align-items:center; justify-content:center;" class="h-300"><canvas id="pieChart" style="max-width:240px; max-height:240px;"></canvas></div>
       </div>
-      <div class="card p-4">
-        <h3 class="section-title mb-3">Perawatan Kendaraan</h3>
-        <div class="overflow-auto">
-          <table class="w-full" id="table-kendaraan"></table>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div><strong>Progress Ring — Penyelesaian Total</strong><div class="muted">Persentase selesai</div></div>
+        <div class="muted">Doughnut</div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:center;" class="h-300">
+        <canvas id="ringChart" style="max-width:260px; max-height:260px;"></canvas>
+      </div>
+    </div>
+
+    <!-- Tables: desktop (tables) & mobile (card-list) -->
+    <div class="tables" style="margin-top:12px;">
+      <!-- AC -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div><strong>Perawatan AC</strong><div class="muted">Detail</div></div>
+          <div class="muted">Tabel</div>
         </div>
+        <div class="table-container"><table id="table-ac"></table></div>
+
+        <!-- mobile card list fallback -->
+        <div id="list-ac" class="card-list" style="margin-top:8px;"></div>
       </div>
-      <div class="card p-4">
-        <h3 class="section-title mb-3">Perawatan Elektronik</h3>
-        <div class="overflow-auto">
-          <table class="w-full" id="table-elektronik"></table>
+
+      <!-- Kendaraan -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div><strong>Perawatan Kendaraan</strong><div class="muted">Detail</div></div>
+          <div class="muted">Tabel</div>
         </div>
+        <div class="table-container"><table id="table-kendaraan"></table></div>
+        <div id="list-kendaraan" class="card-list" style="margin-top:8px;"></div>
       </div>
-      <div class="card p-4">
-        <h3 class="section-title mb-3">Kebersihan Area</h3>
-        <div class="overflow-auto">
-          <table class="w-full" id="table-kebersihan"></table>
+
+      <!-- Elektronik -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div><strong>Perawatan Elektronik</strong><div class="muted">Detail</div></div>
+          <div class="muted">Tabel</div>
         </div>
+        <div class="table-container"><table id="table-elektronik"></table></div>
+        <div id="list-elektronik" class="card-list" style="margin-top:8px;"></div>
       </div>
-    </section>
+
+      <!-- Kebersihan -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div><strong>Kebersihan Area</strong><div class="muted">Detail</div></div>
+          <div class="muted">Tabel</div>
+        </div>
+        <div class="table-container"><table id="table-kebersihan"></table></div>
+        <div id="list-kebersihan" class="card-list" style="margin-top:8px;"></div>
+      </div>
+    </div>
+
+    <footer> Mitra Asa Pratama - GA © 2025 </footer>
   </div>
 
-  <!-- Footer -->
-  <footer class="mt-8 border-t border-slate-200 dark:border-slate-800 text-center text-sm text-slate-500 dark:text-slate-400 py-4">
-    Dashboard GA – MAP • © 2025 
-  </footer>
-
-  <!-- Editor Modal (JSON) -->
-  <dialog id="editor" class="p-0 rounded-2xl w-[min(900px,95vw)]">
-    <form method="dialog" class="card p-0">
-      <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-        <h3 class="font-semibold">Edit Data (JSON)</h3>
-        <button class="btn" value="cancel">Tutup</button>
+  <!-- JSON Editor Modal -->
+  <dialog id="editorModal">
+    <div style="padding:12px; min-width:320px;" class="modal-inner">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <strong>Editor JSON (records)</strong>
+        <div>
+          <button id="closeEditor" class="btn">Tutup</button>
+        </div>
       </div>
-      <div class="p-4">
-        <p class="text-sm text-slate-500 mb-2">Ubah/Tambah data pada array <code>records</code>. Klik <b>Simpan</b> untuk menerapkan.</p>
-        <textarea id="editorTextarea" class="w-full h-[55vh] rounded-xl border border-slate-300 p-3 font-mono text-xs dark:bg-slate-900 dark:border-slate-700"></textarea>
+      <textarea id="editorTextarea" style="width:100%; height:320px; border-radius:8px; padding:8px; background:transparent; border:1px solid var(--card-border); color:inherit; font-family:monospace;"></textarea>
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+        <button id="editorCancel" class="btn">Batal</button>
+        <button id="editorSave" class="btn primary">Simpan</button>
       </div>
-      <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
-        <button class="btn" value="cancel">Batal</button>
-        <button id="btnSaveData" type="button" class="btn">Simpan</button>
-      </div>
-    </form>
+    </div>
   </dialog>
 
   <!-- CRUD Modal -->
-  <dialog id="crudModal" class="p-0 rounded-2xl w-[min(720px,95vw)]">
-    <form id="crudForm" class="card p-0" method="dialog">
-      <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-        <h3 class="font-semibold" id="crudTitle">Tambah Data</h3>
-        <button class="btn" value="cancel">Tutup</button>
-      </div>
-      <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <input type="hidden" id="crudId" />
+  <dialog id="crudModal">
+    <div style="padding:12px; min-width:320px;" class="modal-inner">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <strong id="crudTitle">Tambah Data</strong>
         <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">Kategori</label>
-          <select id="crudKategori" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
-            <option>AC</option>
-            <option>Kendaraan</option>
-            <option>Elektronik</option>
-            <option>Kebersihan</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">Tanggal</label>
-          <input type="date" id="crudTanggal" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700" />
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-xs font-medium text-slate-500 mb-1">Judul / Deskripsi</label>
-          <input type="text" id="crudJudul" placeholder="Deskripsi pekerjaan" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700" />
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">Lokasi</label>
-          <input type="text" id="crudLokasi" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700" />
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">Status</label>
-          <select id="crudStatus" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
-            <option>Selesai</option>
-            <option>On Proses</option>
-            <option>Belum</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">PIC</label>
-          <input type="text" id="crudPIC" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700" />
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">Biaya (IDR)</label>
-          <input type="number" id="crudBiaya" min="0" step="1" value="0" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700" />
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-xs font-medium text-slate-500 mb-1">Catatan</label>
-          <textarea id="crudCatatan" rows="3" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"></textarea>
+          <button id="crudClose" class="btn">Tutup</button>
         </div>
       </div>
-      <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
-        <button class="btn" value="cancel">Batal</button>
-        <button id="btnCrudSave" type="button" class="btn btn-primary">Simpan</button>
-      </div>
-    </form>
+
+      <form id="crudForm" onsubmit="return false;">
+        <input type="hidden" id="crudId">
+        <div style="display:grid; grid-template-columns: repeat(2,1fr); gap:8px;">
+          <div>
+            <label class="small">Kategori</label>
+            <select id="crudKategori"><option>AC</option><option>Kendaraan</option><option>Elektronik</option><option>Kebersihan</option></select>
+          </div>
+          <div>
+            <label class="small">Tanggal</label>
+            <input type="date" id="crudTanggal">
+          </div>
+          <div style="grid-column:span 2;">
+            <label class="small">Judul / Deskripsi</label>
+            <input type="text" id="crudJudul" placeholder="Deskripsi pekerjaan">
+          </div>
+          <div>
+            <label class="small">Lokasi</label>
+            <input type="text" id="crudLokasi">
+          </div>
+          <div>
+            <label class="small">Status</label>
+            <select id="crudStatus"><option>Selesai</option><option>Proses</option><option>Belum</option></select>
+          </div>
+          <div>
+            <label class="small">PIC</label>
+            <input type="text" id="crudPIC">
+          </div>
+          <div>
+            <label class="small">Biaya (IDR)</label>
+            <input type="number" id="crudBiaya" min="0" step="1" value="0">
+          </div>
+          <div style="grid-column:span 2;">
+            <label class="small">Catatan</label>
+            <textarea id="crudCatatan" rows="3"></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+          <button id="crudCancel" class="btn">Batal</button>
+          <button id="btnCrudSave" class="btn primary">Simpan</button>
+        </div>
+      </form>
+    </div>
   </dialog>
 
-  <script>
-    // ---------- Sample Data (awal) ----------
-    let records = [
-      // AC
-      { id: 1,  kategori: 'AC', judul: 'Cuci AC Split Ruang HR', lokasi: 'Lantai 2 - HR', tanggal: '2025-08-05', status: 'Selesai', penanggungJawab: 'Adi', biaya: 250000, catatan: 'Freon normal' },
-      { id: 2,  kategori: 'AC', judul: 'Periksa kebocoran AC Server', lokasi: 'Ruang Server', tanggal: '2025-08-10', status: 'Proses', penanggungJawab: 'Budi', biaya: 0, catatan: 'Cek pipa drain' },
-      { id: 3,  kategori: 'AC', judul: 'Ganti filter AC Lobby', lokasi: 'Lobby', tanggal: '2025-08-14', status: 'Belum', penanggungJawab: 'Dedi', biaya: 100000, catatan: '' },
-      // Kendaraan
-      { id: 11, kategori: 'Kendaraan', judul: 'Service Berkala Avanza', lokasi: 'Bengkel Resmi', tanggal: '2025-08-03', status: 'Selesai', penanggungJawab: 'Rina', biaya: 950000, catatan: 'Ganti oli' },
-      { id: 12, kategori: 'Kendaraan', judul: 'Perpanjang STNK Motor', lokasi: 'Samsat', tanggal: '2025-08-12', status: 'Selesai', penanggungJawab: 'Joko', biaya: 450000, catatan: '' },
-      { id: 13, kategori: 'Kendaraan', judul: 'Tambal Ban Motor', lokasi: 'Parkir Basement', tanggal: '2025-08-15', status: 'Proses', penanggungJawab: 'Rina', biaya: 15000, catatan: '' },
-      // Elektronik
-      { id: 21, kategori: 'Elektronik', judul: 'Periksa Printer Keuangan', lokasi: 'Keuangan', tanggal: '2025-08-02', status: 'Selesai', penanggungJawab: 'Andi', biaya: 0, catatan: 'Cleaning head' },
-      { id: 22, kategori: 'Elektronik', judul: 'Ganti Mouse Procurement', lokasi: 'Procurement', tanggal: '2025-08-08', status: 'Selesai', penanggungJawab: 'Sari', biaya: 75000, catatan: '' },
-      { id: 23, kategori: 'Elektronik', judul: 'Instal Ulang OS Div. R&D', lokasi: 'R&D', tanggal: '2025-08-13', status: 'Belum', penanggungJawab: 'Fajar', biaya: 0, catatan: 'Backup dulu' },
-      // Kebersihan
-      { id: 31, kategori: 'Kebersihan', judul: 'Deep Cleaning Pantry', lokasi: 'Pantry', tanggal: '2025-08-01', status: 'Selesai', penanggungJawab: 'Tim OB', biaya: 0, catatan: '' },
-      { id: 32, kategori: 'Kebersihan', judul: 'General Cleaning Musholla', lokasi: 'Musholla', tanggal: '2025-08-09', status: 'Selesai', penanggungJawab: 'Tim OB', biaya: 0, catatan: '' },
-      { id: 33, kategori: 'Kebersihan', judul: 'Pembersihan Jamur Dinding', lokasi: 'Gudang', tanggal: '2025-08-16', status: 'Belum', penanggungJawab: 'Tim OB', biaya: 0, catatan: 'Butuh cairan anti jamur' },
-    ];
+<script>
+/* =========================
+   Mobile-friendly Dashboard GA
+   ========================= */
 
-    // ---------- Persist (localStorage) ----------
-    const LS_KEY = 'dashboard-ga-records-v1';
-    function loadFromStorage(){ try{ const s = localStorage.getItem(LS_KEY); if(s){ records = JSON.parse(s); } }catch(e){} }
-    function saveToStorage(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(records)); }catch(e){} }
+const LS_KEY = 'dashboard-ga-records-v1';
+const LS_THEME = 'dashboard-ga-theme-v1';
+const ROLE_KEY = 'dashboard-ga-role-v1';
 
-    // ---------- Utilities ----------
-    const $ = (sel) => document.querySelector(sel);
-    const months = [ '01|Januari','02|Februari','03|Maret','04|April','05|Mei','06|Juni', '07|Juli','08|Agustus','09|September','10|Oktober','11|November','12|Desember' ];
+/* initial sample data (will be replaced by storage if exists) */
+let records = [
+  { id:1, kategori:'AC', judul:'Cuci AC Split Ruang HR', lokasi:'Lantai 2 - HR', tanggal:'2025-08-05', status:'Selesai', penanggungJawab:'Adi', biaya:250000, catatan:'Freon normal' },
+  { id:2, kategori:'AC', judul:'Periksa kebocoran AC Server', lokasi:'Ruang Server', tanggal:'2025-08-10', status:'Proses', penanggungJawab:'Budi', biaya:0, catatan:'Cek pipa drain' },
+  { id:3, kategori:'AC', judul:'Ganti filter AC Lobby', lokasi:'Lobby', tanggal:'2025-08-14', status:'Belum', penanggungJawab:'Dedi', biaya:100000, catatan:'' },
+  { id:11, kategori:'Kendaraan', judul:'Service Berkala Avanza', lokasi:'Bengkel Resmi', tanggal:'2025-08-03', status:'Selesai', penanggungJawab:'Rina', biaya:950000, catatan:'Ganti oli' },
+  { id:12, kategori:'Kendaraan', judul:'Perpanjang STNK Motor', lokasi:'Samsat', tanggal:'2025-08-12', status:'Selesai', penanggungJawab:'Joko', biaya:450000, catatan:'' },
+  { id:13, kategori:'Kendaraan', judul:'Tambal Ban Motor', lokasi:'Parkir Basement', tanggal:'2025-08-15', status:'Proses', penanggungJawab:'Rina', biaya:15000, catatan:'' },
+  { id:21, kategori:'Elektronik', judul:'Periksa Printer Keuangan', lokasi:'Keuangan', tanggal:'2025-08-02', status:'Selesai', penanggungJawab:'Andi', biaya:0, catatan:'Cleaning head' },
+  { id:22, kategori:'Elektronik', judul:'Ganti Mouse Procurement', lokasi:'Procurement', tanggal:'2025-08-08', status:'Selesai', penanggungJawab:'Sari', biaya:75000, catatan:'' },
+  { id:23, kategori:'Elektronik', judul:'Instal Ulang OS Div. R&D', lokasi:'R&D', tanggal:'2025-08-13', status:'Belum', penanggungJawab:'Fajar', biaya:0, catatan:'Backup dulu' },
+  { id:31, kategori:'Kebersihan', judul:'Deep Cleaning Pantry', lokasi:'Pantry', tanggal:'2025-08-01', status:'Selesai', penanggungJawAb:'Tim OB', penanggungJawab:'Tim OB', biaya:0, catatan:'' },
+  { id:32, kategori:'Kebersihan', judul:'General Cleaning Musholla', lokasi:'Musholla', tanggal:'2025-08-09', status:'Selesai', penanggungJawab:'Tim OB', biaya:0, catatan:'' },
+  { id:33, kategori:'Kebersihan', judul:'Pembersihan Jamur Dinding', lokasi:'Gudang', tanggal:'2025-08-16', status:'Belum', penanggungJawab:'Tim OB', biaya:0, catatan:'Butuh cairan anti jamur' },
+];
 
-    function getPeriod(){ const m = $('#filterMonth').value; const y = $('#filterYear').value; return {m, y}; }
-    const fmtCurrency = (n)=> new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n||0);
-    function byPeriod(rec, m, y){ const d = new Date(rec.tanggal); return (String(d.getMonth()+1).padStart(2,'0')===m) && (String(d.getFullYear())===y); }
-    function byFilters(rec){ const {m,y}=getPeriod(); const loc=$('#filterLocation').value; const st=$('#filterStatus').value; return byPeriod(rec,m,y) && (loc==='ALL'||rec.lokasi===loc) && (st==='ALL'||rec.status===st); }
-    const categoryList = ()=>['AC','Kendaraan','Elektronik','Kebersihan'];
+/* state: role */
+let role = sessionStorage.getItem(ROLE_KEY) || null;
+function askRoleIfNeeded(){
+  if(!role){
+    const r = prompt("Masukkan role (admin / viewer):", "viewer");
+    role = r ? r.trim().toLowerCase() : 'viewer';
+    if(role !== 'admin') role = 'viewer';
+    sessionStorage.setItem(ROLE_KEY, role);
+  }
+  document.getElementById('roleLabel').textContent = role;
+  if(role !== 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+}
 
-    function badge(pct){ if(pct>=90) return '<span class="chip chip-green">Baik</span>'; if(pct>=70) return '<span class="chip chip-amber">Perlu perhatian</span>'; return '<span class="chip chip-red">Butuh tindakan</span>'; }
-
-    // ---------- Filters init ----------
-    function initFilters(){
-      $('#filterMonth').innerHTML = months.map(s=>{ const [v,t]=s.split('|'); return `<option value="${v}">${t}</option>` }).join('');
-      const yNow = new Date().getFullYear(); const yearOpts=[]; for(let y=yNow-2;y<=yNow+1;y++) yearOpts.push(`<option value="${y}">${y}</option>`);
-      $('#filterYear').innerHTML = yearOpts.join('');
-      const now = new Date(); $('#filterMonth').value = String(now.getMonth()+1).padStart(2,'0'); $('#filterYear').value = String(now.getFullYear());
-      const locs = Array.from(new Set(records.map(r=>r.lokasi))).sort();
-      $('#filterLocation').innerHTML = ['<option value="ALL">Semua Lokasi</option>', ...locs.map(l=>`<option value="${l}">${l}</option>`)].join('');
+/* persistence */
+function loadFromStorage(){
+  try {
+    const s = localStorage.getItem(LS_KEY);
+    if(s){
+      const parsed = JSON.parse(s);
+      if(Array.isArray(parsed)) records = parsed;
+    } else {
+      localStorage.setItem(LS_KEY, JSON.stringify(records));
     }
+  } catch(e){ console.warn(e); }
+}
+function saveToStorage(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(records)); }catch(e){console.warn(e);} }
 
-    // ---------- KPI rendering ----------
-    function kpiFor(cat, items){
-      const total = items.length;
-      const selesai = items.filter(i=>i.status==='Selesai').length;
-      const belum = items.filter(i=>i.status==='Belum').length;
-      const proses = items.filter(i=>i.status==='Proses').length;
-      const biaya = items.reduce((a,b)=>a+(b.biaya||0),0);
-      const pct = total? Math.round((selesai/total)*100) : 0;
-      return {cat,total,selesai,belum,proses,biaya,pct};
-    }
+/* theme */
+function applyTheme(theme){
+  if(theme === 'light'){ document.documentElement.classList.add('light'); document.getElementById('themeSwitch').setAttribute('data-on','0'); }
+  else { document.documentElement.classList.remove('light'); document.getElementById('themeSwitch').setAttribute('data-on','1'); }
+  localStorage.setItem(LS_THEME, theme);
+}
+function initTheme(){
+  let t = localStorage.getItem(LS_THEME);
+  if(!t) t = 'dark'; // default = dark
+  applyTheme(t);
+}
 
-    function renderKPIs(){
-      const data = categoryList().map(cat=>{ const it = records.filter(r=>r.kategori===cat && byFilters(r)); return kpiFor(cat, it); });
-      const html = data.map(d=>`
-        <div class="card p-4">
-          <div class="flex items-center justify-between">
-            <p class="text-xs uppercase tracking-wide text-slate-500">${d.cat}</p>
-            ${badge(d.pct)}
-          </div>
-          <div class="mt-2 flex items-end justify-between">
-            <div>
-              <div class="text-3xl font-extrabold">${d.pct}%</div>
-              <p class="text-xs text-slate-500">${d.selesai}/${d.total} selesai</p>
-            </div>
-            <div class="text-right text-xs">
-              <div>Proses: <b>${d.proses}</b></div>
-              <div>Belum: <b>${d.belum}</b></div>
-              <div class="mt-1 text-slate-500">Biaya: <b>${fmtCurrency(d.biaya)}</b></div>
-            </div>
-          </div>
-          <div class="mt-3 h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800"><div class="h-2 rounded-full bg-emerald-500" style="width:${d.pct}%"></div></div>
-        </div>`).join('');
-      $('#kpiCards').innerHTML = html;
-    }
+/* helpers */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const months = ['01|Januari','02|Februari','03|Maret','04|April','05|Mei','06|Juni','07|Juli','08|Agustus','09|September','10|Oktober','11|November','12|Desember'];
+function fmtCurrency(n){ return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n||0); }
+function categoryList(){ return ['AC','Kendaraan','Elektronik','Kebersihan']; }
 
-    // ---------- Tables (with CRUD actions) ----------
-    function tableTemplate(items){
-      if(items.length===0) return '<p class="text-sm text-slate-500">Tidak ada data untuk filter ini.</p>';
-      const head = `
-        <thead>
-          <tr>
-            <th class="py-2 pr-2">Tanggal</th>
-            <th class="py-2 pr-2">Judul</th>
-            <th class="py-2 pr-2">Lokasi</th>
-            <th class="py-2 pr-2">PIC</th>
-            <th class="py-2 pr-2">Status</th>
-            <th class="py-2 pr-2 text-right">Biaya</th>
-            <th class="py-2 pl-2">Aksi</th>
-          </tr>
-        </thead>`;
-      const body = items.map(r=>{
-        const chip = r.status==='Selesai' ? 'chip-green' : r.status==='Proses' ? 'chip-amber' : 'chip-red';
-        return `
-          <tr class="border-t border-slate-100 dark:border-slate-800 align-top">
-            <td class="py-2 pr-2 whitespace-nowrap">${r.tanggal}</td>
-            <td class="py-2 pr-2">${r.judul}</td>
-            <td class="py-2 pr-2">${r.lokasi}</td>
-            <td class="py-2 pr-2 whitespace-nowrap">${r.penanggungJawab||'-'}</td>
-            <td class="py-2 pr-2"><span class="chip ${chip}">${r.status}</span></td>
-            <td class="py-2 pr-2 text-right whitespace-nowrap">${fmtCurrency(r.biaya)}</td>
-            <td class="py-2 pl-2 whitespace-nowrap">
-              <button class="action-btn" data-action="edit" data-id="${r.id}" title="Edit"><span>✏️</span><span class="hidden sm:inline">Edit</span></button>
-              <button class="action-btn btn-danger ml-1" data-action="delete" data-id="${r.id}" title="Hapus"><span>🗑️</span><span class="hidden sm:inline">Hapus</span></button>
-            </td>
-          </tr>`
-      }).join('');
-      return head+`<tbody>${body}</tbody>`;
-    }
+/* Filters */
+function initFilters(){
+  $('#filterMonth').innerHTML = months.map(s=>{ const [v,t] = s.split('|'); return `<option value="${v}">${t}</option>`; }).join('');
+  const yNow = new Date().getFullYear(); let arr=[]; for(let y=yNow-2;y<=yNow+1;y++) arr.push(`<option value="${y}">${y}</option>`);
+  $('#filterYear').innerHTML = arr.join('');
+  const now = new Date(); $('#filterMonth').value = String(now.getMonth()+1).padStart(2,'0'); $('#filterYear').value = String(now.getFullYear());
+  rebuildLocationFilter();
+}
+function rebuildLocationFilter(){
+  const locs = Array.from(new Set(records.map(r=>r.lokasi||'').filter(Boolean))).sort();
+  const sel = $('#filterLocation');
+  sel.innerHTML = '<option value="ALL">Semua Lokasi</option>' + locs.map(l=>`<option value="${l}">${l}</option>`).join('');
+}
+function getPeriod(){ return { m: $('#filterMonth').value, y: $('#filterYear').value }; }
+function byPeriod(rec, m, y){ if(!rec||!rec.tanggal) return false; const d=new Date(rec.tanggal); if(isNaN(d)) return false; return String(d.getMonth()+1).padStart(2,'0')===m && String(d.getFullYear())===String(y); }
+function byFilters(rec){
+  const {m,y} = getPeriod(); const loc = $('#filterLocation').value || 'ALL'; const st = $('#filterStatus').value || 'ALL';
+  return byPeriod(rec,m,y) && (loc==='ALL' || rec.lokasi === loc) && (st==='ALL' || rec.status === st);
+}
 
-    function renderTables(){
-      const ac = records.filter(r=>r.kategori==='AC' && byFilters(r)).sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
-      const kn = records.filter(r=>r.kategori==='Kendaraan' && byFilters(r)).sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
-      const el = records.filter(r=>r.kategori==='Elektronik' && byFilters(r)).sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
-      const kb = records.filter(r=>r.kategori==='Kebersihan' && byFilters(r)).sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
-      $('#table-ac').innerHTML = tableTemplate(ac);
-      $('#table-kendaraan').innerHTML = tableTemplate(kn);
-      $('#table-elektronik').innerHTML = tableTemplate(el);
-      $('#table-kebersihan').innerHTML = tableTemplate(kb);
-    }
+/* KPI */
+function kpiFor(cat, items){
+  const total = items.length;
+  const selesai = items.filter(i=>i.status==='Selesai').length;
+  const belum = items.filter(i=>i.status!=='Selesai').length;
+  const biaya = items.reduce((a,b)=>a + (Number(b.biaya)||0), 0);
+  const pct = total ? Math.round((selesai/total)*100) : 0;
+  return {cat,total,selesai,belum,biaya,pct};
+}
+function badgeHtml(pct){
+  if(pct>=90) return `<span class="chip good">Baik</span>`;
+  if(pct>=70) return `<span class="chip warn">Perlu perhatian</span>`;
+  return `<span class="chip bad">Butuh tindakan</span>`;
+}
+function renderKPIs(){
+  const data = categoryList().map(cat => { const items = records.filter(r=>r.kategori===cat && byFilters(r)); return kpiFor(cat, items); });
+  const html = data.map(d=>`
+    <div class="kpi card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="title">${d.cat}</div>
+        ${badgeHtml(d.pct)}
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:8px;">
+        <div>
+          <div class="value">${d.pct}%</div>
+          <div class="muted" style="font-size:12px;">${d.selesai}/${d.total} selesai</div>
+        </div>
+        <div style="text-align:right; font-size:12px; color:var(--muted);">
+          <div>Belum: <b>${d.belum}</b></div>
+          <div style="margin-top:6px">Biaya: <b>${fmtCurrency(d.biaya)}</b></div>
+        </div>
+      </div>
+      <div class="progress-bar"><i style="width:${d.pct}%"></i></div>
+    </div>`).join('');
+  $('#kpiCards').innerHTML = html;
+}
 
-    // ---------- Charts ----------
-    let barChart, pieChart, ringChart;
+/* Table rendering (and mobile card lists) */
+function tableTemplate(items, allowActions=true){
+  if(!items || items.length===0) return `<div style="padding:12px;" class="muted">Tidak ada data untuk filter ini.</div>`;
+  const head = `<thead><tr><th>Tanggal</th><th>Judul</th><th>Lokasi</th><th>PIC</th><th>Status</th><th style="text-align:right">Biaya</th><th>Aksi</th></tr></thead>`;
+  const body = items.map(r=>{
+    const statClass = r.status==='Selesai' ? 'status done' : (r.status==='Proses' ? 'status process' : 'status pending');
+    return `<tr>
+      <td style="white-space:nowrap">${r.tanggal||''}</td>
+      <td>${r.judul||''}</td>
+      <td>${r.lokasi||''}</td>
+      <td style="white-space:nowrap">${r.penanggungJawab||'-'}</td>
+      <td><span class="${statClass}">${r.status||''}</span></td>
+      <td style="text-align:right">${fmtCurrency(r.biaya)}</td>
+      <td style="white-space:nowrap">
+        <button class="action-btn" data-action="edit" data-id="${r.id}">✏️</button>
+        <button class="action-btn" data-action="delete" data-id="${r.id}">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+  return head + `<tbody>${body}</tbody>`;
+}
+function renderCardList(items, containerId){
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  if(!items || items.length===0){ container.innerHTML = ''; return; }
+  container.innerHTML = items.map(r=>{
+    return `<div class="card-item">
+      <div class="meta"><div>${r.tanggal||''}</div><div>${fmtCurrency(r.biaya)}</div></div>
+      <div class="title">${r.judul || ''}</div>
+      <div class="muted">${r.lokasi || ''} • ${r.penanggungJawab || '-'}</div>
+      <div style="display:flex; justify-content:space-between; margin-top:8px; align-items:center;">
+        <div><span class="${r.status==='Selesai'?'status done':(r.status==='Proses'?'status process':'status pending')}">${r.status}</span></div>
+        <div>
+          <button class="action-btn" data-action="edit" data-id="${r.id}">✏️</button>
+          <button class="action-btn" data-action="delete" data-id="${r.id}">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderTables(){
+  const ac = records.filter(r=>r.kategori==='AC' && byFilters(r)).sort((a,b)=>String(a.tanggal||'').localeCompare(String(b.tanggal||'')));
+  const kn = records.filter(r=>r.kategori==='Kendaraan' && byFilters(r)).sort((a,b)=>String(a.tanggal||'').localeCompare(String(b.tanggal||'')));
+  const el = records.filter(r=>r.kategori==='Elektronik' && byFilters(r)).sort((a,b)=>String(a.tanggal||'').localeCompare(String(b.tanggal||'')));
+  const kb = records.filter(r=>r.kategori==='Kebersihan' && byFilters(r)).sort((a,b)=>String(a.tanggal||'').localeCompare(String(b.tanggal||'')));
 
-    function destroyCharts(){ if(barChart){barChart.destroy();} if(pieChart){pieChart.destroy();} if(ringChart){ringChart.destroy();} }
+  $('#table-ac').innerHTML = tableTemplate(ac);
+  $('#table-kendaraan').innerHTML = tableTemplate(kn);
+  $('#table-elektronik').innerHTML = tableTemplate(el);
+  $('#table-kebersihan').innerHTML = tableTemplate(kb);
 
-    function renderCharts(){
-      destroyCharts();
-      const cats = categoryList();
-      const selesai = []; const belum = []; const total = []; let totalDone=0; let totalAll=0;
+  // mobile card lists
+  renderCardList(ac, 'list-ac');
+  renderCardList(kn, 'list-kendaraan');
+  renderCardList(el, 'list-elektronik');
+  renderCardList(kb, 'list-kebersihan');
+}
 
-      cats.forEach(cat=>{
-        const items = records.filter(r=>r.kategori===cat && byFilters(r));
-        const k = kpiFor(cat, items);
-        selesai.push(k.selesai); belum.push(k.total - k.selesai); total.push(k.total);
-        totalDone += k.selesai; totalAll += k.total;
-      });
+/* Charts (Chart.js) */
+let barChart=null, pieChart=null, ringChart=null;
+function destroyCharts(){ if(barChart){barChart.destroy(); barChart=null;} if(pieChart){pieChart.destroy(); pieChart=null;} if(ringChart){ringChart.destroy(); ringChart=null;} }
+function renderCharts(){
+  destroyCharts();
+  const cats = categoryList();
+  const selesai = [], belum = [], totals = [];
+  let totalDone=0, totalAll=0;
+  cats.forEach(cat=>{
+    const items = records.filter(r=>r.kategori===cat && byFilters(r));
+    const total = items.length;
+    const done = items.filter(i=>i.status==='Selesai').length;
+    selesai.push(done); belum.push(total - done); totals.push(total);
+    totalDone += done; totalAll += total;
+  });
 
-      // Bar
-      barChart = new Chart(document.getElementById('barChart'), {
-        type: 'bar', data: { labels: cats, datasets: [ { label: 'Selesai', data: selesai }, { label: 'Belum', data: belum } ] },
-        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}}, scales:{ y:{ beginAtZero:true, precision:0 } } }
-      });
+  // Bar
+  const barCtx = document.getElementById('barChart').getContext('2d');
+  barChart = new Chart(barCtx, {
+    type:'bar',
+    data:{ labels:cats, datasets:[
+      { label:'Selesai', data:selesai, backgroundColor:'rgba(16,185,129,0.95)' },
+      { label:'Belum', data:belum, backgroundColor:'rgba(239,68,68,0.95)' }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:'top'} }, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
+  });
 
-      // Pie
-      pieChart = new Chart(document.getElementById('pieChart'), {
-        type: 'pie', data: { labels: cats, datasets: [{ data: total }] }, options: { responsive:true, maintainAspectRatio:false }
-      });
+  // Pie
+  const pieCtx = document.getElementById('pieChart').getContext('2d');
+  pieChart = new Chart(pieCtx, {
+    type:'pie',
+    data:{ labels:cats, datasets:[{ data:totals, backgroundColor:['#06b6d4','#f97316','#6366f1','#10b981'] }] },
+    options:{ responsive:true, maintainAspectRatio:false }
+  });
 
-      // Progress Ring (doughnut)
-      const pct = totalAll? Math.round((totalDone/totalAll)*100) : 0;
-      ringChart = new Chart(document.getElementById('ringChart'), {
-        type: 'doughnut',
-        data: { labels:['Selesai','Sisa'], datasets:[{ data:[totalDone, Math.max(totalAll-totalDone,0)] }] },
-        options: { responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{ legend:{display:false}, tooltip:{enabled:true} } },
-        plugins: [{
-          id:'centerText',
-          afterDraw(chart){
-            const {ctx} = chart; const meta = chart.getDatasetMeta(0).data[0]; if(!meta) return;
-            ctx.save(); ctx.font = '700 28px Inter, system-ui, sans-serif'; ctx.textAlign='center'; ctx.fillStyle = getComputedStyle(document.documentElement).color;
-            ctx.fillText(`${pct}%`, meta.x, meta.y+8); ctx.restore();
-          }
-        }]
-      });
-    }
+  // Doughnut ring
+  const pct = totalAll ? Math.round((totalDone/totalAll)*100) : 0;
+  const ringCtx = document.getElementById('ringChart').getContext('2d');
+  ringChart = new Chart(ringCtx, {
+    type:'doughnut',
+    data:{ labels:['Selesai','Sisa'], datasets:[{ data:[totalDone, Math.max(totalAll-totalDone,0)], backgroundColor:['#10b981','#6b7280'] }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'72%', plugins:{ legend:{display:false} } },
+    plugins:[{
+      id:'centerText',
+      afterDraw(chart){ const {ctx, chartArea} = chart; const x = (chartArea.left + chartArea.right)/2; const y = (chartArea.top + chartArea.bottom)/2 + 6; ctx.save(); ctx.fillStyle = getComputedStyle(document.documentElement).color; ctx.font = '700 20px Inter, system-ui, sans-serif'; ctx.textAlign='center'; ctx.fillText(pct + '%', x, y); ctx.restore(); }
+    }]
+  });
+}
 
-    // ---------- Export CSV ----------
-    function exportCSV(){
-      const header = ['id','kategori','judul','lokasi','tanggal','status','penanggungJawab','biaya','catatan'];
-      const rows = records.filter(byFilters).map(r=>header.map(h=>String(r[h]??'').replaceAll('"','""')));
-      const csv = [header.join(','), ...rows.map(r=>r.map(v=>`"${v}"`).join(','))].join('\n');
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `dashboard-ga_${$('#filterYear').value}-${$('#filterMonth').value}.csv`;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-    }
+/* Export CSV */
+function exportCSV(){
+  const header = ['id','kategori','judul','lokasi','tanggal','status','penanggungJawab','biaya','catatan'];
+  const rows = records.filter(byFilters).map(r => header.map(h => (r[h]??'').toString().replaceAll('"','""')));
+  const csv = [header.join(','), ...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `dashboard-ga_${$('#filterYear').value}-${$('#filterMonth').value}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
 
-    // ---------- Editor Modal (JSON) ----------
-    function openEditor(){ $('#editorTextarea').value = JSON.stringify(records, null, 2); $('#editor').showModal(); }
-    function saveEditor(){ try{ const next = JSON.parse($('#editorTextarea').value); if(!Array.isArray(next)) throw new Error('Format harus array []'); records = next; rebuildLocationFilter(); renderAll(); saveToStorage(); $('#editor').close(); }catch(err){ alert('Gagal menyimpan data: '+ err.message); }}
+/* JSON Editor */
+function openEditor(){ $('#editorTextarea').value = JSON.stringify(records,null,2); document.getElementById('editorModal').showModal(); }
+function closeEditor(){ document.getElementById('editorModal').close(); }
+function saveEditor(){ try{ const parsed = JSON.parse($('#editorTextarea').value); if(!Array.isArray(parsed)) throw new Error('Format harus array []'); records = parsed; saveToStorage(); rebuildLocationFilter(); renderAll(); closeEditor(); } catch(e){ alert('Gagal simpan: '+ e.message); } }
 
-    // ---------- CRUD helpers ----------
-    function newId(){ return (records.reduce((max, r)=>Math.max(max, r.id||0), 0) + 1); }
-    function getById(id){ return records.find(r=>r.id===id); }
-    function upsertRecord(payload){
-      const idx = records.findIndex(r=>r.id===payload.id);
-      if(idx>=0){ records[idx] = payload; } else { records.push(payload); }
-      saveToStorage();
-    }
-    function deleteRecord(id){
-      if(!confirm('Hapus data ini?')) return;
-      const idx = records.findIndex(r=>r.id===id);
-      if(idx>=0){ records.splice(idx,1); saveToStorage(); renderAll(); }
-    }
+/* CRUD helpers */
+function newId(){ return (records.reduce((m,r)=>Math.max(m, Number(r.id)||0), 0) + 1); }
+function getById(id){ return records.find(r=>Number(r.id)===Number(id)); }
+function upsertRecord(payload){ const idx = records.findIndex(r=>Number(r.id)===Number(payload.id)); if(idx>=0) records[idx] = payload; else records.push(payload); saveToStorage(); }
+function deleteRecord(id){ if(!confirm('Hapus data ini?')) return; const idx = records.findIndex(r=>Number(r.id)===Number(id)); if(idx>=0){ records.splice(idx,1); saveToStorage(); renderAll(); rebuildLocationFilter(); } }
 
-    // ---------- CRUD UI ----------
-    function openCreateModal(){
-      $('#crudTitle').textContent = 'Tambah Data';
-      $('#crudId').value = '';
-      $('#crudKategori').value = 'AC';
-      $('#crudTanggal').valueAsDate = new Date();
-      $('#crudJudul').value = '';
-      $('#crudLokasi').value = '';
-      $('#crudStatus').value = 'Proses';
-      $('#crudPIC').value = '';
-      $('#crudBiaya').value = 0;
-      $('#crudCatatan').value = '';
-      $('#crudModal').showModal();
-    }
+/* CRUD modal UI */
+function openCreateModal(){ $('#crudTitle').textContent = 'Tambah Data'; $('#crudId').value=''; $('#crudKategori').value='AC'; $('#crudTanggal').value = new Date().toISOString().slice(0,10); $('#crudJudul').value=''; $('#crudLokasi').value=''; $('#crudStatus').value='Proses'; $('#crudPIC').value=''; $('#crudBiaya').value=0; $('#crudCatatan').value=''; document.getElementById('crudModal').showModal(); }
+function openEditModal(id){ const r = getById(id); if(!r) return; $('#crudTitle').textContent='Edit Data'; $('#crudId').value=r.id; $('#crudKategori').value=r.kategori; $('#crudTanggal').value=r.tanggal||new Date().toISOString().slice(0,10); $('#crudJudul').value=r.judul||''; $('#crudLokasi').value=r.lokasi||''; $('#crudStatus').value=r.status||'Proses'; $('#crudPIC').value=r.penanggungJawab||''; $('#crudBiaya').value=r.biaya||0; $('#crudCatatan').value=r.catatan||''; document.getElementById('crudModal').showModal(); }
+function closeCrudModal(){ document.getElementById('crudModal').close(); }
+function saveCrud(){ if(role !== 'admin'){ alert('Hanya admin dapat menyimpan'); return; } const id = Number($('#crudId').value) || newId(); const payload = { id, kategori: $('#crudKategori').value, tanggal: $('#crudTanggal').value || new Date().toISOString().slice(0,10), judul: ($('#crudJudul').value||'').trim(), lokasi: ($('#crudLokasi').value||'').trim(), status: $('#crudStatus').value, penanggungJawab: ($('#crudPIC').value||'').trim(), biaya: Number($('#crudBiaya').value)||0, catatan: ($('#crudCatatan').value||'').trim() }; if(!payload.judul){ alert('Judul wajib diisi'); return; } upsertRecord(payload); rebuildLocationFilter(); renderAll(); closeCrudModal(); }
 
-    function openEditModal(id){
-      const r = getById(id); if(!r) return;
-      $('#crudTitle').textContent = 'Edit Data';
-      $('#crudId').value = r.id;
-      $('#crudKategori').value = r.kategori;
-      $('#crudTanggal').value = r.tanggal;
-      $('#crudJudul').value = r.judul;
-      $('#crudLokasi').value = r.lokasi;
-      $('#crudStatus').value = r.status;
-      $('#crudPIC').value = r.penanggungJawab||'';
-      $('#crudBiaya').value = r.biaya||0;
-      $('#crudCatatan').value = r.catatan||'';
-      $('#crudModal').showModal();
-    }
+/* Delegated actions for table/card buttons */
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-action]');
+  if(!btn) return;
+  const action = btn.dataset.action;
+  const id = btn.dataset.id;
+  if(action === 'edit'){ if(role!=='admin'){ alert('Hanya admin dapat mengedit'); return; } openEditModal(id); }
+  if(action === 'delete'){ if(role!=='admin'){ alert('Hanya admin dapat menghapus'); return; } deleteRecord(id); }
+});
 
-    function saveCrud(){
-      const id = Number($('#crudId').value)||newId();
-      const payload = {
-        id,
-        kategori: $('#crudKategori').value,
-        tanggal: $('#crudTanggal').value || new Date().toISOString().slice(0,10),
-        judul: ($('#crudJudul').value||'').trim(),
-        lokasi: ($('#crudLokasi').value||'').trim(),
-        status: $('#crudStatus').value,
-        penanggungJawab: ($('#crudPIC').value||'').trim(),
-        biaya: Number($('#crudBiaya').value)||0,
-        catatan: ($('#crudCatatan').value||'').trim(),
-      };
-      if(!payload.judul){ alert('Judul/Deskripsi wajib diisi'); return; }
-      upsertRecord(payload);
-      rebuildLocationFilter();
-      renderAll();
-      $('#crudModal').close();
-    }
+/* render all */
+function renderAll(){ renderKPIs(); renderCharts(); renderTables(); }
 
-    function rebuildLocationFilter(){
-      const locs = Array.from(new Set(records.map(r=>r.lokasi))).sort();
-      $('#filterLocation').innerHTML = ['<option value="ALL">Semua Lokasi</option>', ...locs.map(l=>`<option value="${l}">${l}</option>`)].join('');
-    }
+/* event bindings */
+function bindEvents(){
+  // filters change
+  ['filterMonth','filterYear','filterLocation','filterStatus'].forEach(id => { const el = document.getElementById(id); if(el) el.addEventListener('change', renderAll); });
 
-    // ---------- Theme ----------
-    function initTheme(){ const saved = localStorage.getItem('theme'); if(saved==='dark') document.documentElement.classList.add('dark'); $('#btnToggleTheme').checked = saved==='dark'; }
-    function toggleTheme(){ const root = document.documentElement; root.classList.toggle('dark'); localStorage.setItem('theme', root.classList.contains('dark')?'dark':'light'); }
+  $('#btnReset').addEventListener('click', ()=>{ initFilters(); renderAll(); });
 
-    // ---------- Render all ----------
-    function renderAll(){ renderKPIs(); renderCharts(); renderTables(); }
+  $('#btnExportCSV').addEventListener('click', exportCSV);
+  $('#btnEditData').addEventListener('click', openEditor);
+  $('#closeEditor').addEventListener('click', closeEditor);
+  $('#editorCancel').addEventListener('click', closeEditor);
+  $('#editorSave').addEventListener('click', saveEditor);
 
-    // ---------- Events ----------
-    function bindEvents(){
-      ['filterMonth','filterYear','filterLocation','filterStatus'].forEach(id=> document.getElementById(id).addEventListener('change', renderAll));
-      $('#btnReset').addEventListener('click', ()=>{ initFilters(); renderAll(); });
-      $('#btnEditData').addEventListener('click', openEditor);
-      $('#btnSaveData').addEventListener('click', saveEditor);
-      $('#btnExportCSV').addEventListener('click', exportCSV);
-      $('#btnToggleTheme').addEventListener('change', toggleTheme);
-      $('#btnCreate').addEventListener('click', openCreateModal);
-      $('#btnCrudSave').addEventListener('click', saveCrud);
+  // theme switch
+  document.getElementById('themeSwitch').addEventListener('click', ()=>{
+    const current = localStorage.getItem(LS_THEME) === 'light' ? 'light' : 'dark';
+    const next = current === 'light' ? 'dark' : 'light';
+    applyTheme(next);
+  });
 
-      // Delegasi tombol Edit / Hapus di tabel
-      document.addEventListener('click', (e)=>{
-        const btn = e.target.closest('[data-action]');
-        if(!btn) return;
-        const id = Number(btn.getAttribute('data-id'));
-        const action = btn.getAttribute('data-action');
-        if(action==='edit') openEditModal(id);
-        if(action==='delete') deleteRecord(id);
-      });
+  // CRUD modal controls
+  $('#btnCreate').addEventListener('click', ()=>{ if(role!=='admin'){ alert('Hanya admin dapat menambah'); return; } openCreateModal(); });
+  $('#crudClose').addEventListener('click', closeCrudModal);
+  $('#crudCancel').addEventListener('click', closeCrudModal);
+  $('#btnCrudSave').addEventListener('click', saveCrud);
 
-      // Keyboard: Ctrl/Cmd + E to open JSON editor
-      window.addEventListener('keydown', (e)=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='e'){ e.preventDefault(); openEditor(); } });
-    }
+  // keyboard open editor
+  window.addEventListener('keydown', (e)=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='e'){ e.preventDefault(); openEditor(); }});
+}
 
-    // ---------- Boot ----------
-    (function boot(){
-      loadFromStorage();
-      initTheme();
-      initFilters();
-      renderAll();
-      bindEvents();
-    })();
-  </script>
+/* Init boot */
+(function boot(){
+  askRoleIfNeeded();
+  loadFromStorage();
+  initTheme();
+  initFilters();
+  bindEvents();
+  renderAll();
+})();
+</script>
 </body>
 </html>
