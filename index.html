@@ -60,8 +60,8 @@
           <span class="theme-slider"></span>
           <span class="text-sm"></span>
         </label>
-        <button id="btnExportCSV" class="btn" title="Ekspor ringkasan ke CSV">⬇️ <span class="ml-2 hidden sm:inline">Ekspor</span></button>
-        <button id="btnEditData" class="btn" title="Edit data via JSON (lanjutan)">📝 <span class="ml-2 hidden sm:inline">Editor JSON</span></button>
+        <button id="btnExportCSV" class="btn" title="Ekspor ringkasan ke CSV">⬇️ <span class="ml-2 hidden sm:inline">Ekspor xls</span></button>
+        <button id="btnEditData" class="btn" title="Edit data via JSON (lanjutan)">📝 <span class="ml-2 hidden sm:inline"></span></button>
       </div>
     </header>
 
@@ -78,7 +78,7 @@
         <div class="grow">
           <label class="block text-xs font-medium text-slate-500 mb-1">Lokasi</label>
           <select id="filterLocation" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
-            <option value="ALL">Semua Lokasi</option>
+            <option value="">Semua Lokasi</option>
           </select>
         </div>
         <div class="grow">
@@ -220,7 +220,7 @@
           <label class="block text-xs font-medium text-slate-500 mb-1">Status</label>
           <select id="crudStatus" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
             <option>Selesai</option>
-            <option>Proses</option>
+            <option>On Proses</option>
             <option>Belum</option>
           </select>
         </div>
