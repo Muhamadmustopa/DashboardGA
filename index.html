@@ -371,7 +371,7 @@ let records = [
 let role = sessionStorage.getItem(ROLE_KEY) || null;
 function askRoleIfNeeded(){
   if(!role){
-    const r = prompt("Masukkan role (admin / viewer):", "viewer");
+    const r = prompt("Masukkan role ( ):", "viewer");
     role = r ? r.trim().toLowerCase() : 'viewer';
     if(role !== 'admin') role = 'viewer';
     sessionStorage.setItem(ROLE_KEY, role);
