@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard GA — Perawatan & Kebersihan</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{ color-scheme: light dark; }
+    body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    .card{ @apply rounded-2xl shadow-sm border border-slate-200 bg-white; }
+    .dark .card{ @apply border-slate-800 bg-slate-900; }
+    .chip{ @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium; }
+    .chip-green{ @apply bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200; }
+    .chip-amber{ @apply bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200; }
+    .chip-red{ @apply bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200; }
+    .btn{ @apply inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold shadow-sm border border-slate-200 bg-white hover:bg-slate-50 active:scale-[.99]; }
+    .dark .btn{ @apply border-slate-800 bg-slate-900 hover:bg-slate-800; }
+    .grid-cards{ @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-4; }
+    .section-title{ @apply text-slate-700 dark:text-slate-200 font-semibold; }
+    .kbd{ @apply px-2 py-1 rounded-md border text-xs bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
+  <div class="max-w-7xl mx-auto p-4 sm:p-6">
+    <!-- Header -->
+    <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Dashboard General Affair</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Perawatan AC • Perawatan Kendaraan • Perawatan Elektronik • Kebersihan Area</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btnToggleTheme" class="btn" title="Toggle tema (Terang/Gelap)">🌓 <span class="ml-2 hidden sm:inline">Tema</span></button>
+        <button id="btnExportCSV" class="btn" title="Ekspor ringkasan ke CSV">⬇️ <span class="ml-2 hidden sm:inline">Ekspor</span></button>
+      </div>
+    </header>
+
+    <!-- Filters -->
+    <section class="card p-4 mb-4">
+      <div class="flex flex-col md:flex-row md:items-end gap-3">
+        <div class="grow">
+          <label class="block text-xs font-medium text-slate-500 mb-1">Periode</label>
+          <div class="grid grid-cols-2 gap-3">
+            <select id="filterMonth" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700"></select>
+            <select id="filterYear" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700"></select>
+          </div>
+        </div>
+        <div class="grow">
+          <label class="block text-xs font-medium text-slate-500 mb-1">Lokasi</label>
+          <select id="filterLocation" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+            <option value="ALL">Semua Lokasi</option>
+          </select>
+        </div>
+        <div class="grow">
+          <label class="block text-xs font-medium text-slate-500 mb-1">Status</label>
+          <select id="filterStatus" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+            <option value="ALL">Semua Status</option>
+            <option value="Selesai">Selesai</option>
+            <option value="Proses">Proses</option>
+            <option value="Belum">Belum</option>
+          </select>
+        </div>
+        <div class="flex gap-2">
+          <button id="btnReset" class="btn">Reset</button>
+          <button id="btnEditData" class="btn">Edit Data</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Cards -->
+    <section class="grid-cards mb-4" id="kpiCards"></section>
+
+    <!-- Charts -->
+    <section class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
+      <div class="card p-4 xl:col-span-2">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="section-title">Progress per Kategori (Selesai vs Belum)</h3>
+          <span class="kbd">Bar</span>
+        </div>
+        <canvas id="barChart" height="140"></canvas>
+      </div>
+      <div class="card p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="section-title">Proporsi Pekerjaan</h3>
+          <span class="kbd">Pie</span>
+        </div>
+        <canvas id="pieChart" height="140"></canvas>
+      </div>
+    </section>
+
+    <!-- Tables -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="card p-4">
+        <h3 class="section-title mb-3">Perawatan AC</h3>
+        <div class="overflow-auto">
+          <table class="w-full text-sm" id="table-ac"></table>
+        </div>
+      </div>
+      <div class="card p-4">
+        <h3 class="section-title mb-3">Perawatan Kendaraan</h3>
+        <div class="overflow-auto">
+          <table class="w-full text-sm" id="table-kendaraan"></table>
+        </div>
+      </div>
+      <div class="card p-4">
+        <h3 class="section-title mb-3">Perawatan Elektronik</h3>
+        <div class="overflow-auto">
+          <table class="w-full text-sm" id="table-elektronik"></table>
+        </div>
+      </div>
+      <div class="card p-4">
+        <h3 class="section-title mb-3">Kebersihan Area</h3>
+        <div class="overflow-auto">
+          <table class="w-full text-sm" id="table-kebersihan"></table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Editor Modal -->
+  <dialog id="editor" class="p-0 rounded-2xl w-[min(900px,95vw)]">
+    <form method="dialog" class="card p-0">
+      <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <h3 class="font-semibold">Edit Data (JSON)</h3>
+        <button class="btn" value="cancel">Tutup</button>
+      </div>
+      <div class="p-4">
+        <p class="text-sm text-slate-500 mb-2">Ubah/ Tambah data pada array <code>records</code>. Klik <b>Simpan</b> untuk menerapkan.</p>
+        <textarea id="editorTextarea" class="w-full h-[55vh] rounded-xl border border-slate-300 p-3 font-mono text-xs dark:bg-slate-900 dark:border-slate-700"></textarea>
+      </div>
+      <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+        <button class="btn" value="cancel">Batal</button>
+        <button id="btnSaveData" type="button" class="btn">Simpan</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    // ---------- Sample Data (edit via JSON editor) ----------
+    let records = [
+      // Perawatan AC
+      { id: 1,  kategori: 'AC', judul: 'Cuci AC Split Ruang HR', lokasi: 'Lantai 2 - HR', tanggal: '2025-08-05', status: 'Selesai', penanggungJawab: 'Adi', biaya: 250000, catatan: 'Freon normal' },
+      { id: 2,  kategori: 'AC', judul: 'Periksa kebocoran AC Server', lokasi: 'Ruang Server', tanggal: '2025-08-10', status: 'Proses', penanggungJawab: 'Budi', biaya: 0, catatan: 'Cek pipa drain' },
+      { id: 3,  kategori: 'AC', judul: 'Ganti filter AC Lobby', lokasi: 'Lobby', tanggal: '2025-08-14', status: 'Belum', penanggungJawab: 'Dedi', biaya: 100000, catatan: '' },
+
+      // Perawatan Kendaraan
+      { id: 11, kategori: 'Kendaraan', judul: 'Service Berkala Avanza', lokasi: 'Bengkel Resmi', tanggal: '2025-08-03', status: 'Selesai', penanggungJawab: 'Rina', biaya: 950000, catatan: 'Ganti oli' },
+      { id: 12, kategori: 'Kendaraan', judul: 'Perpanjang STNK Motor', lokasi: 'Samsat', tanggal: '2025-08-12', status: 'Selesai', penanggungJawab: 'Joko', biaya: 450000, catatan: '' },
+      { id: 13, kategori: 'Kendaraan', judul: 'Tambal Ban Motor', lokasi: 'Parkir Basement', tanggal: '2025-08-15', status: 'Proses', penanggungJawab: 'Rina', biaya: 15000, catatan: '' },
+
+      // Perawatan Elektronik
+      { id: 21, kategori: 'Elektronik', judul: 'Periksa Printer Keuangan', lokasi: 'Keuangan', tanggal: '2025-08-02', status: 'Selesai', penanggungJawab: 'Andi', biaya: 0, catatan: 'Cleaning head' },
+      { id: 22, kategori: 'Elektronik', judul: 'Ganti Mouse Procurement', lokasi: 'Procurement', tanggal: '2025-08-08', status: 'Selesai', penanggungJawab: 'Sari', biaya: 75000, catatan: '' },
+      { id: 23, kategori: 'Elektronik', judul: 'Instal Ulang OS Div. R&D', lokasi: 'R&D', tanggal: '2025-08-13', status: 'Belum', penanggungJawab: 'Fajar', biaya: 0, catatan: 'Backup dulu' },
+
+      // Kebersihan Area
+      { id: 31, kategori: 'Kebersihan', judul: 'Deep Cleaning Pantry', lokasi: 'Pantry', tanggal: '2025-08-01', status: 'Selesai', penanggungJawab: 'Tim OB', biaya: 0, catatan: '' },
+      { id: 32, kategori: 'Kebersihan', judul: 'General Cleaning Musholla', lokasi: 'Musholla', tanggal: '2025-08-09', status: 'Selesai', penanggungJawab: 'Tim OB', biaya: 0, catatan: '' },
+      { id: 33, kategori: 'Kebersihan', judul: 'Pembersihan Jamur Dinding', lokasi: 'Gudang', tanggal: '2025-08-16', status: 'Belum', penanggungJawab: 'Tim OB', biaya: 0, catatan: 'Butuh cairan anti jamur' },
+    ];
+
+    // ---------- Utilities ----------
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+    const months = [
+      '01|Januari','02|Februari','03|Maret','04|April','05|Mei','06|Juni',
+      '07|Juli','08|Agustus','09|September','10|Oktober','11|November','12|Desember'
+    ];
+
+    function getPeriod(){
+      const m = $('#filterMonth').value; const y = $('#filterYear').value;
+      return {m, y};
+    }
+
+    function fmtCurrency(n){
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n||0)
+    }
+
+    function byPeriod(rec, m, y){
+      const d = new Date(rec.tanggal);
+      return (String(d.getMonth()+1).padStart(2,'0')===m) && (String(d.getFullYear())===y);
+    }
+
+    function byFilters(rec){
+      const {m,y} = getPeriod();
+      const loc = $('#filterLocation').value; const st = $('#filterStatus').value;
+      const okPeriod = byPeriod(rec, m, y);
+      const okLoc = loc==='ALL' || rec.lokasi===loc;
+      const okSt = st==='ALL' || rec.status===st;
+      return okPeriod && okLoc && okSt;
+    }
+
+    function categoryList(){
+      return ['AC','Kendaraan','Elektronik','Kebersihan'];
+    }
+
+    function badge(pct){
+      if(pct>=90) return '<span class="chip chip-green">Baik</span>';
+      if(pct>=70) return '<span class="chip chip-amber">Perlu perhatian</span>';
+      return '<span class="chip chip-red">Butuh tindakan</span>';
+    }
+
+    // ---------- Filters init ----------
+    function initFilters(){
+      // Month
+      $('#filterMonth').innerHTML = months.map(s=>{
+        const [v,t] = s.split('|');
+        return `<option value="${v}">${t}</option>`
+      }).join('');
+      // Years (±2 tahun dari tahun berjalan)
+      const yNow = new Date().getFullYear();
+      const yearOpts = [];
+      for(let y=yNow-2; y<=yNow+1; y++) yearOpts.push(`<option value="${y}">${y}</option>`);
+      $('#filterYear').innerHTML = yearOpts.join('');
+      // Default to current month-year
+      const now = new Date();
+      $('#filterMonth').value = String(now.getMonth()+1).padStart(2,'0');
+      $('#filterYear').value = String(now.getFullYear());
+      // Locations from data
+      const locs = Array.from(new Set(records.map(r=>r.lokasi))).sort();
+      $('#filterLocation').innerHTML = ['<option value="ALL">Semua Lokasi</option>', ...locs.map(l=>`<option value="${l}">${l}</option>`)].join('');
+    }
+
+    // ---------- KPI rendering ----------
+    function kpiFor(cat, items){
+      const total = items.length;
+      const selesai = items.filter(i=>i.status==='Selesai').length;
+      const belum = items.filter(i=>i.status==='Belum').length;
+      const proses = items.filter(i=>i.status==='Proses').length;
+      const biaya = items.reduce((a,b)=>a+(b.biaya||0),0);
+      const pct = total? Math.round((selesai/total)*100) : 0;
+      return {cat,total,selesai,belum,proses,biaya,pct};
+    }
+
+    function renderKPIs(){
+      const data = categoryList().map(cat=>{
+        const it = records.filter(r=>r.kategori===cat && byFilters(r));
+        return kpiFor(cat, it);
+      });
+      const html = data.map(d=>{
+        return `
+        <div class="card p-4">
+          <div class="flex items-center justify-between">
+            <p class="text-xs uppercase tracking-wide text-slate-500">${d.cat}</p>
+            ${badge(d.pct)}
+          </div>
+          <div class="mt-2 flex items-end justify-between">
+            <div>
+              <div class="text-3xl font-extrabold">${d.pct}%</div>
+              <p class="text-xs text-slate-500">${d.selesai}/${d.total} selesai</p>
+            </div>
+            <div class="text-right text-xs">
+              <div>Proses: <b>${d.proses}</b></div>
+              <div>Belum: <b>${d.belum}</b></div>
+              <div class="mt-1 text-slate-500">Biaya: <b>${fmtCurrency(d.biaya)}</b></div>
+            </div>
+          </div>
+          <div class="mt-3 h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800">
+            <div class="h-2 rounded-full bg-emerald-500" style="width:${d.pct}%"></div>
+          </div>
+        </div>`
+      }).join('');
+      $('#kpiCards').innerHTML = html;
+    }
+
+    // ---------- Tables rendering ----------
+    function tableTemplate(items){
+      if(items.length===0) return '<p class="text-sm text-slate-500">Tidak ada data untuk filter ini.</p>';
+      const head = `
+        <thead class="text-left text-xs text-slate-500">
+          <tr>
+            <th class="py-2 pr-2">Tanggal</th>
+            <th class="py-2 pr-2">Judul</th>
+            <th class="py-2 pr-2">Lokasi</th>
+            <th class="py-2 pr-2">Penanggung Jawab</th>
+            <th class="py-2 pr-2">Status</th>
+            <th class="py-2 pr-2 text-right">Biaya</th>
+          </tr>
+        </thead>`;
+      const body = items.map(r=>{
+        const chip = r.status==='Selesai' ? 'chip-green' : r.status==='Proses' ? 'chip-amber' : 'chip-red';
+        return `
+          <tr class="border-t border-slate-100 dark:border-slate-800">
+            <td class="py-2 pr-2 whitespace-nowrap">${r.tanggal}</td>
+            <td class="py-2 pr-2">${r.judul}</td>
+            <td class="py-2 pr-2">${r.lokasi}</td>
+            <td class="py-2 pr-2 whitespace-nowrap">${r.penanggungJawab||'-'}</td>
+            <td class="py-2 pr-2"><span class="chip ${chip}">${r.status}</span></td>
+            <td class="py-2 pr-2 text-right whitespace-nowrap">${fmtCurrency(r.biaya)}</td>
+          </tr>`
+      }).join('');
+      return head+`<tbody>${body}</tbody>`;
+    }
+
+    function renderTables(){
+      const {m,y} = getPeriod();
+      const ac = records.filter(r=>r.kategori==='AC' && byFilters(r)).sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
+      const kn = records.filter(r=>r.kategori==='Kendaraan' && byFilters(r)).sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
+      const el = records.filter(r=>r.kategori==='Elektronik' && byFilters(r)).sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
+      const kb = records.filter(r=>r.kategori==='Kebersihan' && byFilters(r)).sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
+      $('#table-ac').innerHTML = tableTemplate(ac);
+      $('#table-kendaraan').innerHTML = tableTemplate(kn);
+      $('#table-elektronik').innerHTML = tableTemplate(el);
+      $('#table-kebersihan').innerHTML = tableTemplate(kb);
+    }
+
+    // ---------- Charts ----------
+    let barChart, pieChart;
+
+    function destroyCharts(){
+      if(barChart){ barChart.destroy(); barChart=null; }
+      if(pieChart){ pieChart.destroy(); pieChart=null; }
+    }
+
+    function renderCharts(){
+      destroyCharts();
+      const cats = categoryList();
+      const total = []; const selesai = []; const belum = [];
+      const countsForPie = [];
+
+      cats.forEach(cat=>{
+        const items = records.filter(r=>r.kategori===cat && byFilters(r));
+        const k = kpiFor(cat, items);
+        total.push(k.total); selesai.push(k.selesai); belum.push(k.total - k.selesai);
+        countsForPie.push(k.total);
+      });
+
+      const ctxBar = document.getElementById('barChart');
+      barChart = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: cats,
+          datasets: [
+            { label: 'Selesai', data: selesai },
+            { label: 'Belum', data: belum }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' } },
+          scales: { y: { beginAtZero: true, precision:0 } }
+        }
+      });
+
+      const ctxPie = document.getElementById('pieChart');
+      pieChart = new Chart(ctxPie, {
+        type: 'pie',
+        data: { labels: cats, datasets: [{ data: countsForPie }] },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    // ---------- Export CSV ----------
+    function exportCSV(){
+      const header = ['id','kategori','judul','lokasi','tanggal','status','penanggungJawab','biaya','catatan'];
+      const rows = records.filter(byFilters).map(r=>header.map(h=>String(r[h]??'').replaceAll('"','""')));
+      const csv = [header.join(','), ...rows.map(r=>r.map(v=>`"${v}"`).join(','))].join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `dashboard-ga_${$('#filterYear').value}-${$('#filterMonth').value}.csv`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // ---------- Editor Modal ----------
+    function openEditor(){
+      $('#editorTextarea').value = JSON.stringify(records, null, 2);
+      $('#editor').showModal();
+    }
+
+    function saveEditor(){
+      try{
+        const next = JSON.parse($('#editorTextarea').value);
+        if(!Array.isArray(next)) throw new Error('Format harus array []');
+        records = next;
+        // Rebuild location filter (in case new locations are added)
+        const locs = Array.from(new Set(records.map(r=>r.lokasi))).sort();
+        $('#filterLocation').innerHTML = ['<option value="ALL">Semua Lokasi</option>', ...locs.map(l=>`<option value="${l}">${l}</option>`)].join('');
+        // Re-render
+        renderAll();
+        $('#editor').close();
+      }catch(err){
+        alert('Gagal menyimpan data: '+ err.message);
+      }
+    }
+
+    // ---------- Theme ----------
+    function toggleTheme(){
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', document.documentElement.classList.contains('dark')?'dark':'light');
+    }
+
+    function initTheme(){
+      const saved = localStorage.getItem('theme');
+      if(saved==='dark') document.documentElement.classList.add('dark');
+    }
+
+    // ---------- Render all ----------
+    function renderAll(){
+      renderKPIs();
+      renderCharts();
+      renderTables();
+    }
+
+    // ---------- Events ----------
+    function bindEvents(){
+      ['filterMonth','filterYear','filterLocation','filterStatus'].forEach(id=>{
+        document.getElementById(id).addEventListener('change', renderAll);
+      });
+      $('#btnReset').addEventListener('click', ()=>{ initFilters(); renderAll(); });
+      $('#btnEditData').addEventListener('click', openEditor);
+      $('#btnSaveData').addEventListener('click', saveEditor);
+      $('#btnExportCSV').addEventListener('click', exportCSV);
+      $('#btnToggleTheme').addEventListener('click', toggleTheme);
+      // Keyboard: Ctrl/Cmd + E to open editor
+      window.addEventListener('keydown', (e)=>{
+        if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='e'){
+          e.preventDefault(); openEditor();
+        }
+      });
+    }
+
+    // ---------- Boot ----------
+    initTheme();
+    initFilters();
+    bindEvents();
+    renderAll();
+  </script>
+</body>
+</html>
