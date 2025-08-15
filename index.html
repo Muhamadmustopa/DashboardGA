@@ -21,6 +21,8 @@
     .chip-amber{ @apply bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200; }
     .chip-red{ @apply bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200; }
     .btn{ @apply inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold shadow-sm border border-slate-200 bg-white hover:bg-slate-50 active:scale-[.99]; }
+    .btn-danger{ @apply border-red-200 text-red-700 bg-red-50 hover:bg-red-100 dark:border-red-900 dark:text-red-300 dark:bg-red-950/40; }
+    .btn-primary{ @apply bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700; }
     .dark .btn{ @apply border-slate-800 bg-slate-900 hover:bg-slate-800; }
     .grid-cards{ @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-4; }
     .section-title{ @apply text-slate-700 dark:text-slate-200 font-semibold; }
@@ -34,8 +36,13 @@
     .theme-switch input:checked + .theme-slider{ background:#475569; }
     .theme-switch input:checked + .theme-slider::before{ transform: translateX(26px); content:'🌙'; }
 
-    /* Fix chart heights */
+    /* Chart fixed heights */
     .h-chart{ height:300px; }
+
+    /* Table */
+    table th, table td{ @apply text-sm; }
+    table th{ @apply text-left text-xs text-slate-500 font-medium; }
+    .action-btn{ @apply inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-xs; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
@@ -46,14 +53,15 @@
         <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Dashboard General Affair - MAP</h1>
         <p class="text-sm text-slate-500 dark:text-slate-400">Perawatan AC • Perawatan Kendaraan • Perawatan Elektronik • Kebersihan Area</p>
       </div>
-      <div class="flex items-center gap-3">
-        <!-- Theme switch -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <button id="btnCreate" class="btn btn-primary" title="Tambah data baru">➕ <span class="ml-1">Tambah Data</span></button>
         <label class="theme-switch" title="Toggle tema (Terang/Gelap)">
           <input type="checkbox" id="btnToggleTheme">
           <span class="theme-slider"></span>
-          <span class="text-sm">Tema</span>
+          <span class="text-sm"></span>
         </label>
         <button id="btnExportCSV" class="btn" title="Ekspor ringkasan ke CSV">⬇️ <span class="ml-2 hidden sm:inline">Ekspor</span></button>
+        <button id="btnEditData" class="btn" title="Edit data via JSON (lanjutan)">📝 <span class="ml-2 hidden sm:inline">Editor JSON</span></button>
       </div>
     </header>
 
@@ -84,7 +92,6 @@
         </div>
         <div class="flex gap-2">
           <button id="btnReset" class="btn">Reset</button>
-          <button id="btnEditData" class="btn">Edit Data</button>
         </div>
       </div>
     </section>
@@ -132,25 +139,25 @@
       <div class="card p-4">
         <h3 class="section-title mb-3">Perawatan AC</h3>
         <div class="overflow-auto">
-          <table class="w-full text-sm" id="table-ac"></table>
+          <table class="w-full" id="table-ac"></table>
         </div>
       </div>
       <div class="card p-4">
         <h3 class="section-title mb-3">Perawatan Kendaraan</h3>
         <div class="overflow-auto">
-          <table class="w-full text-sm" id="table-kendaraan"></table>
+          <table class="w-full" id="table-kendaraan"></table>
         </div>
       </div>
       <div class="card p-4">
         <h3 class="section-title mb-3">Perawatan Elektronik</h3>
         <div class="overflow-auto">
-          <table class="w-full text-sm" id="table-elektronik"></table>
+          <table class="w-full" id="table-elektronik"></table>
         </div>
       </div>
       <div class="card p-4">
         <h3 class="section-title mb-3">Kebersihan Area</h3>
         <div class="overflow-auto">
-          <table class="w-full text-sm" id="table-kebersihan"></table>
+          <table class="w-full" id="table-kebersihan"></table>
         </div>
       </div>
     </section>
@@ -158,10 +165,10 @@
 
   <!-- Footer -->
   <footer class="mt-8 border-t border-slate-200 dark:border-slate-800 text-center text-sm text-slate-500 dark:text-slate-400 py-4">
-    Dashboard GA – MAP • © 2025 • Dibuat oleh Tim GA
+    Dashboard GA – MAP • © 2025 
   </footer>
 
-  <!-- Editor Modal -->
+  <!-- Editor Modal (JSON) -->
   <dialog id="editor" class="p-0 rounded-2xl w-[min(900px,95vw)]">
     <form method="dialog" class="card p-0">
       <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -169,7 +176,7 @@
         <button class="btn" value="cancel">Tutup</button>
       </div>
       <div class="p-4">
-        <p class="text-sm text-slate-500 mb-2">Ubah/ Tambah data pada array <code>records</code>. Klik <b>Simpan</b> untuk menerapkan.</p>
+        <p class="text-sm text-slate-500 mb-2">Ubah/Tambah data pada array <code>records</code>. Klik <b>Simpan</b> untuk menerapkan.</p>
         <textarea id="editorTextarea" class="w-full h-[55vh] rounded-xl border border-slate-300 p-3 font-mono text-xs dark:bg-slate-900 dark:border-slate-700"></textarea>
       </div>
       <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
@@ -179,8 +186,66 @@
     </form>
   </dialog>
 
+  <!-- CRUD Modal -->
+  <dialog id="crudModal" class="p-0 rounded-2xl w-[min(720px,95vw)]">
+    <form id="crudForm" class="card p-0" method="dialog">
+      <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <h3 class="font-semibold" id="crudTitle">Tambah Data</h3>
+        <button class="btn" value="cancel">Tutup</button>
+      </div>
+      <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <input type="hidden" id="crudId" />
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Kategori</label>
+          <select id="crudKategori" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+            <option>AC</option>
+            <option>Kendaraan</option>
+            <option>Elektronik</option>
+            <option>Kebersihan</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Tanggal</label>
+          <input type="date" id="crudTanggal" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-xs font-medium text-slate-500 mb-1">Judul / Deskripsi</label>
+          <input type="text" id="crudJudul" placeholder="Deskripsi pekerjaan" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Lokasi</label>
+          <input type="text" id="crudLokasi" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Status</label>
+          <select id="crudStatus" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+            <option>Selesai</option>
+            <option>Proses</option>
+            <option>Belum</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">PIC</label>
+          <input type="text" id="crudPIC" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Biaya (IDR)</label>
+          <input type="number" id="crudBiaya" min="0" step="1" value="0" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-xs font-medium text-slate-500 mb-1">Catatan</label>
+          <textarea id="crudCatatan" rows="3" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"></textarea>
+        </div>
+      </div>
+      <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+        <button class="btn" value="cancel">Batal</button>
+        <button id="btnCrudSave" type="button" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </dialog>
+
   <script>
-    // ---------- Sample Data (edit via JSON editor) ----------
+    // ---------- Sample Data (awal) ----------
     let records = [
       // AC
       { id: 1,  kategori: 'AC', judul: 'Cuci AC Split Ruang HR', lokasi: 'Lantai 2 - HR', tanggal: '2025-08-05', status: 'Selesai', penanggungJawab: 'Adi', biaya: 250000, catatan: 'Freon normal' },
@@ -199,6 +264,11 @@
       { id: 32, kategori: 'Kebersihan', judul: 'General Cleaning Musholla', lokasi: 'Musholla', tanggal: '2025-08-09', status: 'Selesai', penanggungJawab: 'Tim OB', biaya: 0, catatan: '' },
       { id: 33, kategori: 'Kebersihan', judul: 'Pembersihan Jamur Dinding', lokasi: 'Gudang', tanggal: '2025-08-16', status: 'Belum', penanggungJawab: 'Tim OB', biaya: 0, catatan: 'Butuh cairan anti jamur' },
     ];
+
+    // ---------- Persist (localStorage) ----------
+    const LS_KEY = 'dashboard-ga-records-v1';
+    function loadFromStorage(){ try{ const s = localStorage.getItem(LS_KEY); if(s){ records = JSON.parse(s); } }catch(e){} }
+    function saveToStorage(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(records)); }catch(e){} }
 
     // ---------- Utilities ----------
     const $ = (sel) => document.querySelector(sel);
@@ -257,30 +327,35 @@
       $('#kpiCards').innerHTML = html;
     }
 
-    // ---------- Tables ----------
+    // ---------- Tables (with CRUD actions) ----------
     function tableTemplate(items){
       if(items.length===0) return '<p class="text-sm text-slate-500">Tidak ada data untuk filter ini.</p>';
       const head = `
-        <thead class="text-left text-xs text-slate-500">
+        <thead>
           <tr>
             <th class="py-2 pr-2">Tanggal</th>
             <th class="py-2 pr-2">Judul</th>
             <th class="py-2 pr-2">Lokasi</th>
-            <th class="py-2 pr-2">Penanggung Jawab</th>
+            <th class="py-2 pr-2">PIC</th>
             <th class="py-2 pr-2">Status</th>
             <th class="py-2 pr-2 text-right">Biaya</th>
+            <th class="py-2 pl-2">Aksi</th>
           </tr>
         </thead>`;
       const body = items.map(r=>{
         const chip = r.status==='Selesai' ? 'chip-green' : r.status==='Proses' ? 'chip-amber' : 'chip-red';
         return `
-          <tr class="border-t border-slate-100 dark:border-slate-800">
+          <tr class="border-t border-slate-100 dark:border-slate-800 align-top">
             <td class="py-2 pr-2 whitespace-nowrap">${r.tanggal}</td>
             <td class="py-2 pr-2">${r.judul}</td>
             <td class="py-2 pr-2">${r.lokasi}</td>
             <td class="py-2 pr-2 whitespace-nowrap">${r.penanggungJawab||'-'}</td>
             <td class="py-2 pr-2"><span class="chip ${chip}">${r.status}</span></td>
             <td class="py-2 pr-2 text-right whitespace-nowrap">${fmtCurrency(r.biaya)}</td>
+            <td class="py-2 pl-2 whitespace-nowrap">
+              <button class="action-btn" data-action="edit" data-id="${r.id}" title="Edit"><span>✏️</span><span class="hidden sm:inline">Edit</span></button>
+              <button class="action-btn btn-danger ml-1" data-action="delete" data-id="${r.id}" title="Hapus"><span>🗑️</span><span class="hidden sm:inline">Hapus</span></button>
+            </td>
           </tr>`
       }).join('');
       return head+`<tbody>${body}</tbody>`;
@@ -333,11 +408,10 @@
         options: { responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{ legend:{display:false}, tooltip:{enabled:true} } },
         plugins: [{
           id:'centerText',
-          afterDraw(chart, args, opts){
-            const {ctx, chartArea:{width, height}} = chart; ctx.save();
-            ctx.font = '700 28px Inter, system-ui, sans-serif'; ctx.textAlign='center'; ctx.fillStyle = getComputedStyle(document.documentElement).color;
-            ctx.fillText(`${pct}%`, chart.getDatasetMeta(0).data[0].x, chart.getDatasetMeta(0).data[0].y+8);
-            ctx.restore();
+          afterDraw(chart){
+            const {ctx} = chart; const meta = chart.getDatasetMeta(0).data[0]; if(!meta) return;
+            ctx.save(); ctx.font = '700 28px Inter, system-ui, sans-serif'; ctx.textAlign='center'; ctx.fillStyle = getComputedStyle(document.documentElement).color;
+            ctx.fillText(`${pct}%`, meta.x, meta.y+8); ctx.restore();
           }
         }]
       });
@@ -354,12 +428,81 @@
       document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
-    // ---------- Editor Modal ----------
-    function openEditor(){ document.getElementById('editorTextarea').value = JSON.stringify(records, null, 2); document.getElementById('editor').showModal(); }
-    function saveEditor(){ try{ const next = JSON.parse(document.getElementById('editorTextarea').value); if(!Array.isArray(next)) throw new Error('Format harus array []'); records = next; const locs = Array.from(new Set(records.map(r=>r.lokasi))).sort(); document.getElementById('filterLocation').innerHTML = ['<option value="ALL">Semua Lokasi</option>', ...locs.map(l=>`<option value="${l}">${l}</option>`)].join(''); renderAll(); document.getElementById('editor').close(); }catch(err){ alert('Gagal menyimpan data: '+ err.message); }}
+    // ---------- Editor Modal (JSON) ----------
+    function openEditor(){ $('#editorTextarea').value = JSON.stringify(records, null, 2); $('#editor').showModal(); }
+    function saveEditor(){ try{ const next = JSON.parse($('#editorTextarea').value); if(!Array.isArray(next)) throw new Error('Format harus array []'); records = next; rebuildLocationFilter(); renderAll(); saveToStorage(); $('#editor').close(); }catch(err){ alert('Gagal menyimpan data: '+ err.message); }}
+
+    // ---------- CRUD helpers ----------
+    function newId(){ return (records.reduce((max, r)=>Math.max(max, r.id||0), 0) + 1); }
+    function getById(id){ return records.find(r=>r.id===id); }
+    function upsertRecord(payload){
+      const idx = records.findIndex(r=>r.id===payload.id);
+      if(idx>=0){ records[idx] = payload; } else { records.push(payload); }
+      saveToStorage();
+    }
+    function deleteRecord(id){
+      if(!confirm('Hapus data ini?')) return;
+      const idx = records.findIndex(r=>r.id===id);
+      if(idx>=0){ records.splice(idx,1); saveToStorage(); renderAll(); }
+    }
+
+    // ---------- CRUD UI ----------
+    function openCreateModal(){
+      $('#crudTitle').textContent = 'Tambah Data';
+      $('#crudId').value = '';
+      $('#crudKategori').value = 'AC';
+      $('#crudTanggal').valueAsDate = new Date();
+      $('#crudJudul').value = '';
+      $('#crudLokasi').value = '';
+      $('#crudStatus').value = 'Proses';
+      $('#crudPIC').value = '';
+      $('#crudBiaya').value = 0;
+      $('#crudCatatan').value = '';
+      $('#crudModal').showModal();
+    }
+
+    function openEditModal(id){
+      const r = getById(id); if(!r) return;
+      $('#crudTitle').textContent = 'Edit Data';
+      $('#crudId').value = r.id;
+      $('#crudKategori').value = r.kategori;
+      $('#crudTanggal').value = r.tanggal;
+      $('#crudJudul').value = r.judul;
+      $('#crudLokasi').value = r.lokasi;
+      $('#crudStatus').value = r.status;
+      $('#crudPIC').value = r.penanggungJawab||'';
+      $('#crudBiaya').value = r.biaya||0;
+      $('#crudCatatan').value = r.catatan||'';
+      $('#crudModal').showModal();
+    }
+
+    function saveCrud(){
+      const id = Number($('#crudId').value)||newId();
+      const payload = {
+        id,
+        kategori: $('#crudKategori').value,
+        tanggal: $('#crudTanggal').value || new Date().toISOString().slice(0,10),
+        judul: ($('#crudJudul').value||'').trim(),
+        lokasi: ($('#crudLokasi').value||'').trim(),
+        status: $('#crudStatus').value,
+        penanggungJawab: ($('#crudPIC').value||'').trim(),
+        biaya: Number($('#crudBiaya').value)||0,
+        catatan: ($('#crudCatatan').value||'').trim(),
+      };
+      if(!payload.judul){ alert('Judul/Deskripsi wajib diisi'); return; }
+      upsertRecord(payload);
+      rebuildLocationFilter();
+      renderAll();
+      $('#crudModal').close();
+    }
+
+    function rebuildLocationFilter(){
+      const locs = Array.from(new Set(records.map(r=>r.lokasi))).sort();
+      $('#filterLocation').innerHTML = ['<option value="ALL">Semua Lokasi</option>', ...locs.map(l=>`<option value="${l}">${l}</option>`)].join('');
+    }
 
     // ---------- Theme ----------
-    function initTheme(){ const saved = localStorage.getItem('theme'); if(saved==='dark') document.documentElement.classList.add('dark'); document.getElementById('btnToggleTheme').checked = saved==='dark'; }
+    function initTheme(){ const saved = localStorage.getItem('theme'); if(saved==='dark') document.documentElement.classList.add('dark'); $('#btnToggleTheme').checked = saved==='dark'; }
     function toggleTheme(){ const root = document.documentElement; root.classList.toggle('dark'); localStorage.setItem('theme', root.classList.contains('dark')?'dark':'light'); }
 
     // ---------- Render all ----------
@@ -368,20 +511,33 @@
     // ---------- Events ----------
     function bindEvents(){
       ['filterMonth','filterYear','filterLocation','filterStatus'].forEach(id=> document.getElementById(id).addEventListener('change', renderAll));
-      document.getElementById('btnReset').addEventListener('click', ()=>{ initFilters(); renderAll(); });
-      document.getElementById('btnEditData').addEventListener('click', openEditor);
-      document.getElementById('btnSaveData').addEventListener('click', saveEditor);
-      document.getElementById('btnExportCSV').addEventListener('click', exportCSV);
-      document.getElementById('btnToggleTheme').addEventListener('change', toggleTheme);
+      $('#btnReset').addEventListener('click', ()=>{ initFilters(); renderAll(); });
+      $('#btnEditData').addEventListener('click', openEditor);
+      $('#btnSaveData').addEventListener('click', saveEditor);
+      $('#btnExportCSV').addEventListener('click', exportCSV);
+      $('#btnToggleTheme').addEventListener('change', toggleTheme);
+      $('#btnCreate').addEventListener('click', openCreateModal);
+      $('#btnCrudSave').addEventListener('click', saveCrud);
+
+      // Delegasi tombol Edit / Hapus di tabel
+      document.addEventListener('click', (e)=>{
+        const btn = e.target.closest('[data-action]');
+        if(!btn) return;
+        const id = Number(btn.getAttribute('data-id'));
+        const action = btn.getAttribute('data-action');
+        if(action==='edit') openEditModal(id);
+        if(action==='delete') deleteRecord(id);
+      });
+
+      // Keyboard: Ctrl/Cmd + E to open JSON editor
       window.addEventListener('keydown', (e)=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='e'){ e.preventDefault(); openEditor(); } });
     }
 
     // ---------- Boot ----------
     (function boot(){
+      loadFromStorage();
       initTheme();
-      // init filters (month/year/location)
-      $('#filterMonth') && initFilters();
-      // Build month/year defaults if page loaded mid-month
+      initFilters();
       renderAll();
       bindEvents();
     })();
